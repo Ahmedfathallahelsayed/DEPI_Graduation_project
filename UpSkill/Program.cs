@@ -79,8 +79,12 @@ namespace UpSkill
             app.UseCors("Clients");
             app.UseHttpsRedirection();
 
-            app.UseAuthorization();
+            // Required for serving thumbnail images from wwwroot/thumbnails/
+            app.UseStaticFiles();
 
+            // MUST come before UseAuthorization — validates JWT tokens
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.MapControllers();
 

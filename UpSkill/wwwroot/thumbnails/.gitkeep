@@ -1,0 +1,2 @@
+This folder stores course thumbnail images uploaded by instructors.
+Files are saved here by CourseService.SaveThumbnailAsync() and served at /thumbnails/{filename}
