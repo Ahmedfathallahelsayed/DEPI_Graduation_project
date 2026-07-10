@@ -1,7 +1,9 @@
-﻿using Application.Identity;
+using Application.Courses.Interfaces;
+using Application.Identity;
 using Application.JWT;
 using Infrastructure.Persistance;
 using Infrastructure.Persistance.DbContext;
+using Infrastructure.Service.Courses;
 using Infrastructure.Services.Identity;
 using Infrastructure.Services.JWT;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -53,7 +55,7 @@ namespace Infrastructure
 
             // Add DbContext Connection
             services.AddDbContext<AppDBContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("MostafaCon")));
+            options.UseSqlServer(configuration.GetConnectionString("MoneerCon")));
 
             // Adding Identity
             services.AddIdentity<AppUser, IdentityRole>()
@@ -64,6 +66,10 @@ namespace Infrastructure
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
+
+            // Course Module Services (Team Member 2)
+            services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<ICourseService, CourseService>();
 
 
 
