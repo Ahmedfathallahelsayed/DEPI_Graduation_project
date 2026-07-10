@@ -59,9 +59,9 @@ namespace Infrastructure.Services.Identity
             return Result<string>.Success(user.Id);
         }
 
-        public async Task<Result<string>> CreateUserAsync(string email, string password)
+        public async Task<Result<string>> CreateUserAsync(string email, string password, string PhoneNumber, string Fullname)
         {
-            var user = new AppUser { UserName = email, Email = email };
+            var user = new AppUser { UserName = email, Email = email, PhoneNumber = PhoneNumber, FullName = Fullname};
             var result = await UserManager.CreateAsync(user, password);
 
             if (!result.Succeeded)

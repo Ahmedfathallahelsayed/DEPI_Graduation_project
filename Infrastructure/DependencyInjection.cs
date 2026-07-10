@@ -1,8 +1,10 @@
+using Application.Account.Interface;
 using Application.Courses.Interfaces;
 using Application.Identity;
 using Application.JWT;
 using Infrastructure.Persistance;
 using Infrastructure.Persistance.DbContext;
+using Infrastructure.Service.Account;
 using Infrastructure.Service.Courses;
 using Infrastructure.Services.Identity;
 using Infrastructure.Services.JWT;
@@ -55,7 +57,7 @@ namespace Infrastructure
 
             // Add DbContext Connection
             services.AddDbContext<AppDBContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("MoneerCon")));
+            options.UseSqlServer(configuration.GetConnectionString("MostafaCon")));
 
             // Adding Identity
             services.AddIdentity<AppUser, IdentityRole>()
@@ -66,6 +68,9 @@ namespace Infrastructure
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
+
+            // Account Service
+            services.AddScoped<IAccountService, AccountService>();
 
             // Course Module Services (Team Member 2)
             services.AddScoped<ICategoryService, CategoryService>();

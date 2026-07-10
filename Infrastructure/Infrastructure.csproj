@@ -25,7 +25,6 @@
 
   <ItemGroup>
     <Folder Include="Identity\" />
-    <Folder Include="Repo\Common\" />
     <Folder Include="Repo\Contracts\" />
     <Folder Include="Repo\Implementation\" />
     <Folder Include="UnitOfWork\" />
