@@ -18,22 +18,20 @@ namespace UpSkillAPI.Controllers
         }
 
         [HttpGet("course/{courseId}/hierarchy")]
-        // [Authorize] // Uncomment when Auth is fully integrated
+        [Authorize]
         public async Task<IActionResult> GetCourseHierarchy(int courseId)
         {
-            // For testing, if user is not authenticated, pass null or a test string
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "test-student-id";
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
             var hierarchy = await _studentLearningService.GetCourseHierarchyAsync(courseId, userId);
             return Ok(hierarchy);
         }
 
         [HttpPost("lessons/{lessonId}/complete")]
-        // [Authorize(Roles = "Student")] // Uncomment when Auth is fully integrated
+        [Authorize(Roles = "Student")]
         public async Task<IActionResult> MarkLessonComplete(int lessonId)
         {
-            // For testing, if user is not authenticated, pass null or a test string
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "test-student-id";
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
             var result = await _studentLearningService.MarkLessonCompleteAsync(lessonId, userId);
             if (!result) return BadRequest("Unable to mark lesson complete. Please ensure you are enrolled.");
@@ -64,10 +62,10 @@ namespace UpSkillAPI.Controllers
         }
 
         [HttpPost("courses/{courseId}/enroll")]
-        // [Authorize(Roles = "Student")]
+        [Authorize(Roles = "Student")]
         public async Task<IActionResult> EnrollStudent(int courseId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "test-student-id";
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
             var result = await _studentLearningService.EnrollStudentAsync(courseId, userId);
             
@@ -77,10 +75,10 @@ namespace UpSkillAPI.Controllers
         }
 
         [HttpGet("my-courses")]
-        // [Authorize(Roles = "Student")]
+        [Authorize(Roles = "Student")]
         public async Task<IActionResult> GetMyCourses()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "test-student-id";
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
             var myCourses = await _studentLearningService.GetMyCoursesAsync(userId);
             return Ok(myCourses);
