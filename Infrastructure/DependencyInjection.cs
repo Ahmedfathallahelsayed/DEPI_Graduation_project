@@ -76,6 +76,10 @@ namespace Infrastructure
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<ICourseService, CourseService>();
 
+            // Course Content Module Services (Team Member 3)
+            services.AddScoped<Application.CourseContent.Interfaces.ICourseContentService, Infrastructure.Service.CourseContent.CourseContentService>();
+            services.AddScoped<Application.CourseContent.Interfaces.IStudentLearningService, Infrastructure.Service.CourseContent.StudentLearningService>();
+
 
 
             return services;
