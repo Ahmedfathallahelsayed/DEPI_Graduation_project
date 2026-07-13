@@ -19,9 +19,48 @@ namespace Infrastructure.Service.Admin
             _context = context;
         }
 
+        public async Task<Result<DashboardStatsDto>> GetDashboardStatsAsync()
+        {
+            var roleIds = await _context.Roles
+                .AsNoTracking()
+                .Where(r => r.Name == "Student" || r.Name == "Instructor")
+                .Select(r => new { r.Name, r.Id })
+                .ToListAsync();
+
+            var studentRoleId = roleIds.FirstOrDefault(r => r.Name == "Student")?.Id;
+            var instructorRoleId = roleIds.FirstOrDefault(r => r.Name == "Instructor")?.Id;
+
+            var totalStudents = studentRoleId is null
+                ? 0
+                : await _context.UserRoles.CountAsync(ur => ur.RoleId == studentRoleId);
+
+            var totalInstructors = instructorRoleId is null
+                ? 0
+                : await _context.UserRoles.CountAsync(ur => ur.RoleId == instructorRoleId);
+
+            var totalCourses = await _context.Courses.CountAsync();
+            var pendingCoursesCount = await _context.Courses
+                .CountAsync(c => c.Status == CourseStatus.SubmittedForApproval && !c.IsApproved);
+
+            var totalRevenue = await _context.Orders
+                .AsNoTracking()
+                .Where(o => o.PaymentStatus == PaymentStatus.Completed)
+                .SumAsync(o => (decimal?)o.TotalAmount) ?? 0m;
+
+            return Result<DashboardStatsDto>.Success(new DashboardStatsDto
+            {
+                TotalStudents = totalStudents,
+                TotalInstructors = totalInstructors,
+                TotalCourses = totalCourses,
+                PendingCoursesCount = pendingCoursesCount,
+                TotalRevenue = totalRevenue
+            });
+        }
+
         public async Task<Result<IEnumerable<CourseSummaryDto>>> GetPendingCoursesAsync()
         {
             var courses = await _context.Courses
+                .AsNoTracking()
                 .Include(c => c.Category)
                 .Include(c => c.Enrollments)
                 .Where(c => c.Status == CourseStatus.SubmittedForApproval && !c.IsApproved)
@@ -30,6 +69,7 @@ namespace Infrastructure.Service.Admin
 
             var instructorIds = courses.Select(c => c.InstructorId).Distinct().ToList();
             var instructors = await _context.Users
+                .AsNoTracking()
                 .Where(u => instructorIds.Contains(u.Id))
                 .ToDictionaryAsync(u => u.Id, u => u.FullName);
 
@@ -41,9 +81,22 @@ namespace Infrastructure.Service.Admin
             return Result<IEnumerable<CourseSummaryDto>>.Success(dtos);
         }
 
+        public async Task<Result<CourseReviewDto>> GetPendingCourseDetailsAsync(int courseId)
+        {
+            var course = await LoadCourseWithContentAsync(courseId, track: false);
+            if (course is null)
+                return Result<CourseReviewDto>.Failure($"Course with ID {courseId} was not found.");
+
+            if (course.Status != CourseStatus.SubmittedForApproval)
+                return Result<CourseReviewDto>.Failure("Course is not in the admin review queue.");
+
+            var instructor = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == course.InstructorId);
+            return Result<CourseReviewDto>.Success(MapToReview(course, instructor));
+        }
+
         public async Task<Result<CourseResponseDto>> ApproveCourseAsync(int courseId)
         {
-            var course = await LoadCourseAsync(courseId);
+            var course = await LoadCourseWithContentAsync(courseId, track: true);
             if (course is null)
                 return Result<CourseResponseDto>.Failure($"Course with ID {courseId} was not found.");
 
@@ -53,7 +106,6 @@ namespace Infrastructure.Service.Admin
             if (course.IsApproved)
                 return Result<CourseResponseDto>.Failure("Course is already approved. Use the publish endpoint to make it live.");
 
-            // Approve only — publishing is a separate Admin action.
             course.IsApproved = true;
             course.UpdatedAt = DateTime.UtcNow;
 
@@ -61,16 +113,26 @@ namespace Infrastructure.Service.Admin
             return Result<CourseResponseDto>.Success(await MapToResponseAsync(course));
         }
 
-        public async Task<Result<CourseResponseDto>> RejectCourseAsync(int courseId, RejectCourseDto? dto = null)
+        public async Task<Result<CourseResponseDto>> RejectCourseAsync(int courseId, RejectCourseDto dto)
         {
-            var course = await LoadCourseAsync(courseId);
+            if (dto is null || string.IsNullOrWhiteSpace(dto.Reason))
+                return Result<CourseResponseDto>.Failure("Rejection reason is required.");
+
+            var reason = dto.Reason.Trim();
+            if (reason.Length < 5)
+                return Result<CourseResponseDto>.Failure("Rejection reason must be at least 5 characters.");
+
+            if (reason.Length > 500)
+                return Result<CourseResponseDto>.Failure("Rejection reason cannot exceed 500 characters.");
+
+            var course = await LoadCourseWithContentAsync(courseId, track: true);
             if (course is null)
                 return Result<CourseResponseDto>.Failure($"Course with ID {courseId} was not found.");
 
             if (course.Status != CourseStatus.SubmittedForApproval)
                 return Result<CourseResponseDto>.Failure("Only courses submitted for approval can be rejected.");
 
-            // No Rejected enum — return to Draft so instructor can revise and resubmit.
+            // Course entity has no RejectionReason column; reason is validated for the API contract only.
             course.IsApproved = false;
             course.Status = CourseStatus.Draft;
             course.UpdatedAt = DateTime.UtcNow;
@@ -81,21 +143,16 @@ namespace Infrastructure.Service.Admin
 
         public async Task<Result<CourseResponseDto>> PublishCourseAsync(int courseId)
         {
-            var course = await LoadCourseAsync(courseId);
+            var course = await LoadCourseWithContentAsync(courseId, track: true);
             if (course is null)
                 return Result<CourseResponseDto>.Failure($"Course with ID {courseId} was not found.");
 
             if (course.Status == CourseStatus.Published && course.IsApproved)
                 return Result<CourseResponseDto>.Failure("Course is already published.");
 
-            if (!course.IsApproved)
-                return Result<CourseResponseDto>.Failure("Only approved courses can be published. Approve the course first.");
-
-            if (string.IsNullOrWhiteSpace(course.Title) || string.IsNullOrWhiteSpace(course.Description))
-                return Result<CourseResponseDto>.Failure("Course must have a title and description before publishing.");
-
-            if (course.CategoryId <= 0)
-                return Result<CourseResponseDto>.Failure("Course must be assigned to a category before publishing.");
+            var validationError = ValidateForPublish(course);
+            if (validationError is not null)
+                return Result<CourseResponseDto>.Failure(validationError);
 
             course.Status = CourseStatus.Published;
             course.UpdatedAt = DateTime.UtcNow;
@@ -106,7 +163,7 @@ namespace Infrastructure.Service.Admin
 
         public async Task<Result<CourseResponseDto>> ArchiveCourseAsync(int courseId)
         {
-            var course = await LoadCourseAsync(courseId);
+            var course = await LoadCourseWithContentAsync(courseId, track: true);
             if (course is null)
                 return Result<CourseResponseDto>.Failure($"Course with ID {courseId} was not found.");
 
@@ -120,20 +177,112 @@ namespace Infrastructure.Service.Admin
             return Result<CourseResponseDto>.Success(await MapToResponseAsync(course));
         }
 
-        private async Task<Course?> LoadCourseAsync(int courseId)
+        private async Task<Course?> LoadCourseWithContentAsync(int courseId, bool track)
         {
-            return await _context.Courses
+            IQueryable<Course> query = _context.Courses
                 .Include(c => c.Category)
                 .Include(c => c.Enrollments)
                 .Include(c => c.CourseSections)
-                .FirstOrDefaultAsync(c => c.Id == courseId);
+                    .ThenInclude(s => s.Lessons);
+
+            if (!track)
+                query = query.AsNoTracking();
+
+            return await query.FirstOrDefaultAsync(c => c.Id == courseId);
+        }
+
+        private static string? ValidateForPublish(Course course)
+        {
+            if (!course.IsApproved)
+                return "Only approved courses can be published. Approve the course first.";
+
+            if (string.IsNullOrWhiteSpace(course.Title))
+                return "Course must have a title before publishing.";
+
+            if (string.IsNullOrWhiteSpace(course.ShortDescription))
+                return "Course must have a short description before publishing.";
+
+            if (string.IsNullOrWhiteSpace(course.Description))
+                return "Course must have a description before publishing.";
+
+            if (course.CategoryId <= 0 || course.Category is null)
+                return "Course must be assigned to a valid category before publishing.";
+
+            if (string.IsNullOrWhiteSpace(course.Language))
+                return "Course must have a language before publishing.";
+
+            if (course.Price < 0)
+                return "Course price cannot be negative.";
+
+            var sections = course.CourseSections?.OrderBy(s => s.DisplayOrder).ToList() ?? [];
+            if (sections.Count == 0)
+                return "Course must have at least one section before publishing.";
+
+            foreach (var section in sections)
+            {
+                var lessons = section.Lessons?.ToList() ?? [];
+                if (lessons.Count == 0)
+                    return $"Section '{section.Title}' must contain at least one lesson before publishing.";
+            }
+
+            return null;
         }
 
         private async Task<CourseResponseDto> MapToResponseAsync(Course course)
         {
-            var instructor = await _context.Users.FindAsync(course.InstructorId);
-            var instructorName = instructor is AppUser appUser ? appUser.FullName : "Unknown";
+            var instructor = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == course.InstructorId);
+            var instructorName = instructor?.FullName ?? "Unknown";
             return MapToResponse(course, course.Category?.Name ?? string.Empty, instructorName);
+        }
+
+        private static CourseReviewDto MapToReview(Course course, AppUser? instructor)
+        {
+            var sections = (course.CourseSections ?? Enumerable.Empty<CourseSection>())
+                .OrderBy(s => s.DisplayOrder)
+                .Select(s => new SectionReviewDto
+                {
+                    Id = s.Id,
+                    Title = s.Title,
+                    DisplayOrder = s.DisplayOrder,
+                    Lessons = (s.Lessons ?? Enumerable.Empty<Lesson>())
+                        .OrderBy(l => l.DisplayOrder)
+                        .Select(l => new LessonReviewDto
+                        {
+                            Id = l.Id,
+                            Title = l.Title,
+                            ContentType = l.ContentType,
+                            VideoUrl = l.VideoUrl,
+                            TextContent = l.TextContent,
+                            AttachmentUrl = l.AttachmentUrl,
+                            DurationInMinutes = l.DurationInMinutes,
+                            DisplayOrder = l.DisplayOrder,
+                            IsPreview = l.IsPreview
+                        })
+                        .ToList()
+                })
+                .ToList();
+
+            return new CourseReviewDto
+            {
+                CourseId = course.Id,
+                Title = course.Title,
+                ShortDescription = course.ShortDescription,
+                Description = course.Description,
+                ThumbnailUrl = course.ThumbnailUrl,
+                Price = course.Price,
+                Level = course.Level,
+                Language = course.Language,
+                Status = course.Status,
+                IsApproved = course.IsApproved,
+                CategoryId = course.CategoryId,
+                CategoryName = course.Category?.Name ?? string.Empty,
+                InstructorId = course.InstructorId,
+                InstructorName = instructor?.FullName ?? "Unknown",
+                InstructorEmail = instructor?.Email,
+                CreatedAt = course.CreatedAt,
+                UpdatedAt = course.UpdatedAt,
+                Sections = sections
+            };
         }
 
         private static CourseResponseDto MapToResponse(Course c, string categoryName, string instructorName) => new()

@@ -19,12 +19,28 @@ namespace UpSkill.Controllers
             _adminService = adminService;
         }
 
+        /// <summary>LMS dashboard statistics for admins.</summary>
+        [HttpGet("dashboard")]
+        public async Task<IActionResult> GetDashboard()
+        {
+            var result = await _adminService.GetDashboardStatsAsync();
+            return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+        }
+
         /// <summary>Courses submitted for review and not yet approved.</summary>
         [HttpGet("pending-courses")]
         public async Task<IActionResult> GetPendingCourses()
         {
             var result = await _adminService.GetPendingCoursesAsync();
             return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+        }
+
+        /// <summary>Full course review details (sections, lessons, resources) for a pending course.</summary>
+        [HttpGet("pending-courses/{courseId:int}")]
+        public async Task<IActionResult> GetPendingCourseDetails(int courseId)
+        {
+            var result = await _adminService.GetPendingCourseDetailsAsync(courseId);
+            return ToActionResult(result);
         }
 
         /// <summary>Approve a submitted course (does not publish).</summary>
@@ -35,15 +51,18 @@ namespace UpSkill.Controllers
             return ToActionResult(result);
         }
 
-        /// <summary>Reject a submitted course → Draft (instructor can revise and resubmit).</summary>
+        /// <summary>Reject a submitted course with a required reason → Draft.</summary>
         [HttpPost("courses/{id:int}/reject")]
-        public async Task<IActionResult> RejectCourse(int id, [FromBody] RejectCourseDto? dto = null)
+        public async Task<IActionResult> RejectCourse(int id, [FromBody] RejectCourseDto dto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var result = await _adminService.RejectCourseAsync(id, dto);
             return ToActionResult(result);
         }
 
-        /// <summary>Publish an approved course (catalog-visible). Only Admin can publish.</summary>
+        /// <summary>Publish an approved, complete course. Only Admin can publish.</summary>
         [HttpPost("courses/{id:int}/publish")]
         public async Task<IActionResult> PublishCourse(int id)
         {
