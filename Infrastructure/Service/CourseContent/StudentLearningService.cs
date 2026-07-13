@@ -133,5 +133,143 @@ namespace Infrastructure.Service.CourseContent
 
             return true;
         }
+        public async Task<IEnumerable<StudentCourseSummaryDto>> GetStudentCatalogAsync(string userId, string? search = null, int? categoryId = null)
+        {
+            var query = _context.Courses
+                .Include(c => c.Category)
+                .Include(c => c.CourseSections)
+                    .ThenInclude(s => s.Lessons)
+                .Where(c => c.Status == Domain.Enum.CourseStatus.Published && c.IsApproved)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(c => c.Title.Contains(search) || c.ShortDescription.Contains(search));
+            }
+
+            if (categoryId.HasValue)
+            {
+                query = query.Where(c => c.CategoryId == categoryId.Value);
+            }
+
+            var courses = await query.ToListAsync();
+
+            // Fetch user enrollments to set IsEnrolled flag
+            var enrolledCourseIds = new HashSet<int>();
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var userEnrollments = await _context.Enrollments
+                    .Where(e => e.StudentId == userId)
+                    .Select(e => e.CourseId)
+                    .ToListAsync();
+                enrolledCourseIds = new HashSet<int>(userEnrollments);
+            }
+
+            // Instructor names might require joining with Users table, but since InstructorId is string,
+            // and we don't have ApplicationUser included in Course entity directly, 
+            // for now we set a default or use InstructorId if that's all we have. 
+            // Often, TM1/TM3 may have added User or we might need UserManager. Let's use InstructorId directly or empty string.
+
+            return courses.Select(c => new StudentCourseSummaryDto
+            {
+                CourseId = c.Id,
+                Title = c.Title,
+                ShortDescription = c.ShortDescription,
+                ThumbnailUrl = c.ThumbnailUrl,
+                Price = c.Price,
+                CategoryName = c.Category?.Name ?? "Uncategorized",
+                InstructorName = c.InstructorId, // TODO: Replace with actual name if User nav property exists
+                Level = c.Level,
+                TotalLessons = c.CourseSections.SelectMany(s => s.Lessons).Count(),
+                IsEnrolled = enrolledCourseIds.Contains(c.Id)
+            });
+        }
+
+        public async Task<StudentCourseDetailsDto?> GetStudentCourseDetailsAsync(int courseId, string userId)
+        {
+            var course = await _context.Courses
+                .Include(c => c.Category)
+                .Include(c => c.CourseSections)
+                    .ThenInclude(s => s.Lessons)
+                .FirstOrDefaultAsync(c => c.Id == courseId && c.Status == Domain.Enum.CourseStatus.Published && c.IsApproved);
+
+            if (course == null) return null;
+
+            var enrollment = string.IsNullOrEmpty(userId) 
+                ? null 
+                : await _context.Enrollments.FirstOrDefaultAsync(e => e.CourseId == courseId && e.StudentId == userId);
+
+            return new StudentCourseDetailsDto
+            {
+                CourseId = course.Id,
+                Title = course.Title,
+                FullDescription = course.Description,
+                ThumbnailUrl = course.ThumbnailUrl,
+                Price = course.Price,
+                InstructorSummary = course.InstructorId, // TODO: Replace with real user info if available
+                CategoryName = course.Category?.Name ?? "Uncategorized",
+                NumberOfSections = course.CourseSections.Count(),
+                NumberOfLessons = course.CourseSections.SelectMany(s => s.Lessons).Count(),
+                IsEnrolled = enrollment != null,
+                ProgressPercent = enrollment?.ProgressPercent
+            };
+        }
+
+        public async Task<Application.Common.Result> EnrollStudentAsync(int courseId, string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+                return Application.Common.Result.Failure("User not authenticated.");
+
+            var course = await _context.Courses
+                .FirstOrDefaultAsync(c => c.Id == courseId && c.Status == Domain.Enum.CourseStatus.Published && c.IsApproved);
+
+            if (course == null)
+                return Application.Common.Result.Failure("Course not found or not published.");
+
+            var existingEnrollment = await _context.Enrollments
+                .FirstOrDefaultAsync(e => e.CourseId == courseId && e.StudentId == userId);
+
+            if (existingEnrollment != null)
+                return Application.Common.Result.Failure("Student is already enrolled in this course.");
+
+            var enrollment = new Enrollment
+            {
+                StudentId = userId,
+                CourseId = courseId,
+                EnrollmentDate = DateTime.UtcNow,
+                ProgressPercent = 0,
+                CompletionStatus = Domain.Enum.CompletionStatus.NotStarted,
+                LastAccessedAt = DateTime.UtcNow
+                // OrderId would be set via payment flow, but we can set to 0 or nullable depending on schema.
+            };
+
+            _context.Enrollments.Add(enrollment);
+            await _context.SaveChangesAsync();
+
+            return Application.Common.Result.Success();
+        }
+
+        public async Task<IEnumerable<MyCourseDto>> GetMyCoursesAsync(string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+                return Enumerable.Empty<MyCourseDto>();
+
+            var enrollments = await _context.Enrollments
+                .Include(e => e.Course)
+                .Where(e => e.StudentId == userId)
+                .OrderByDescending(e => e.LastAccessedAt)
+                .ToListAsync();
+
+            return enrollments.Select(e => new MyCourseDto
+            {
+                CourseId = e.CourseId,
+                Title = e.Course?.Title ?? "Unknown Course",
+                ThumbnailUrl = e.Course?.ThumbnailUrl,
+                ProgressPercent = e.ProgressPercent,
+                CompletionStatus = e.CompletionStatus,
+                EnrolledAt = e.EnrollmentDate,
+                LastAccessedAt = e.LastAccessedAt
+            });
+        }
     }
 }
