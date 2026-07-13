@@ -145,19 +145,17 @@ namespace UpSkill.Controllers
                 : BadRequest(result.Error);
         }
 
-        // ── PUT /api/course/{id}/toggle-publish ───────────────────────────
+        // ── POST /api/course/{id}/submit-for-review ───────────────────────
         /// <summary>
-        /// Toggle course publish status. Instructor only.
-        /// Draft/Archived → SubmittedForApproval.
-        /// Published → Archived.
-        /// Validates required fields before submitting for approval.
+        /// Submit a draft/archived course for admin review. Instructor only.
+        /// Does not publish — Admin publishes via POST /api/Admin/courses/{id}/publish.
         /// </summary>
-        [HttpPut("{id:int}/toggle-publish")]
+        [HttpPost("{id:int}/submit-for-review")]
         [Authorize(Roles = "Instructor")]
-        public async Task<IActionResult> TogglePublish(int id)
+        public async Task<IActionResult> SubmitForReview(int id)
         {
             var instructorId = GetCurrentUserId();
-            var result = await _courseService.TogglePublishAsync(id, instructorId);
+            var result = await _courseService.SubmitForReviewAsync(id, instructorId);
 
             return result.IsSuccess
                 ? Ok(result.Value)
