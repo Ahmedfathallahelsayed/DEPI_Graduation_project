@@ -164,6 +164,10 @@
                                     }
                                 </td>
                                 <td class="pe-4 text-end">
+                                    <a asp-action="ManageContent" asp-route-id="@course.Id"
+                                       class="btn btn-sm btn-outline-info me-1" title="Manage Curriculum">
+                                        <i class="bi bi-collection-play"></i>
+                                    </a>
                                     <a asp-action="EditCourse" asp-route-id="@course.Id"
                                        class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-pencil-square"></i> Edit

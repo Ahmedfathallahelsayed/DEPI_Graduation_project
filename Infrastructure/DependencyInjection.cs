@@ -92,10 +92,6 @@ namespace Infrastructure
                 };
             });
 
-            // Add DbContext Connection
-            services.AddDbContext<AppDBContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("MoneerCon")));
-
             // Registering Repos contracts
             services.AddScoped<ICategory, CategoryRepo>();
             services.AddScoped<ICertificate, CertificateRepo>();
@@ -109,10 +105,6 @@ namespace Infrastructure
 
             // Registering Unit of Work
             services.AddScoped<IUnitOfWork, UnitOfWork.UnitOfWork>();
-            // Adding Identity
-            services.AddIdentity<AppUser, IdentityRole>()
-                    .AddEntityFrameworkStores<AppDBContext>()
-                    .AddDefaultTokenProviders();
 
 
             // Registering Services in DI

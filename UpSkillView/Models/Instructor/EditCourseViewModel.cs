@@ -34,5 +34,7 @@ namespace UpSkillView.Models.Instructor
 
         /// <summary>The current thumbnail URL, shown as a preview while editing.</summary>
         public string? ExistingThumbnailUrl { get; set; }
+
+        public List<Application.CourseContent.DTOs.SectionDto> Sections { get; set; } = new();
     }
 }

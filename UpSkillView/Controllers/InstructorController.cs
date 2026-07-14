@@ -165,7 +165,13 @@ namespace UpSkillView.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                TempData["SuccessMessage"] = "Course created successfully!";
+                TempData["SuccessMessage"] = "Course created successfully! Now you can manage its sections and lessons.";
+                var responseBody = await response.Content.ReadAsStringAsync();
+                var createdCourse = JsonSerializer.Deserialize<CourseResponseDto>(responseBody, JsonOpts);
+                if (createdCourse != null)
+                {
+                    return RedirectToAction("EditCourse", new { id = createdCourse.Id, activeTab = "sessions" });
+                }
                 return RedirectToAction("MyCourses");
             }
 
@@ -180,8 +186,9 @@ namespace UpSkillView.Controllers
         // ══════════════════════════════════════════════════════════════════════
 
         [HttpGet]
-        public async Task<IActionResult> EditCourse(int id)
+        public async Task<IActionResult> EditCourse(int id, string? activeTab = null)
         {
+            ViewBag.ActiveTab = activeTab;
             var client = GetAuthenticatedClient();
             var response = await client.GetAsync($"api/course/my-courses/{id}");
 
@@ -211,6 +218,18 @@ namespace UpSkillView.Controllers
                                         ? null
                                         : $"{ApiBaseUrl}{course.ThumbnailUrl}"
             };
+
+            // Fetch course sections and lessons
+            var sectionsResponse = await client.GetAsync($"api/CourseContent/course/{id}/sections");
+            if (sectionsResponse.IsSuccessStatusCode)
+            {
+                var sectionsContent = await sectionsResponse.Content.ReadAsStringAsync();
+                var sections = JsonSerializer.Deserialize<List<Application.CourseContent.DTOs.SectionDto>>(sectionsContent, JsonOpts);
+                if (sections != null)
+                {
+                    model.Sections = sections;
+                }
+            }
 
             await LoadCategoriesAsync();
             ViewBag.ApiBaseUrl = ApiBaseUrl;
@@ -282,6 +301,51 @@ namespace UpSkillView.Controllers
             }
 
             return RedirectToAction("MyCourses");
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        // MANAGE CURRICULUM & CONTENT
+        // ══════════════════════════════════════════════════════════════════════
+
+        [HttpGet]
+        public async Task<IActionResult> ManageContent(int id)
+        {
+            var client = GetAuthenticatedClient();
+            var response = await client.GetAsync($"api/CourseContent/course/{id}/sections");
+            
+            var vm = new UpSkillView.Models.Instructor.ManageContentViewModel { CourseId = id };
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var sections = JsonSerializer.Deserialize<List<Application.CourseContent.DTOs.SectionDto>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (sections != null)
+                {
+                    vm.Sections = sections;
+                }
+            }
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateSection([FromBody] Application.CourseContent.DTOs.CreateSectionDto dto)
+        {
+            var client = GetAuthenticatedClient();
+            var response = await client.PostAsJsonAsync("api/CourseContent/sections", dto);
+            if (response.IsSuccessStatusCode)
+                return Ok();
+            return BadRequest(await response.Content.ReadAsStringAsync());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateLesson([FromBody] Application.CourseContent.DTOs.CreateLessonDto dto)
+        {
+            var client = GetAuthenticatedClient();
+            var response = await client.PostAsJsonAsync("api/CourseContent/lessons", dto);
+            if (response.IsSuccessStatusCode)
+                return Ok();
+            return BadRequest(await response.Content.ReadAsStringAsync());
         }
     }
 }
