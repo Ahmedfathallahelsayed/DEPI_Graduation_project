@@ -1,4 +1,4 @@
-@model Application.CourseContent.DTOs.CourseHierarchyDto
+@model UpSkillView.Models.CoursePlayerViewModel
 @{
     ViewData["Title"] = Model.CourseTitle;
 }
@@ -44,14 +44,14 @@
                 {
                     for (int i = 0; i < Model.Sections.Count; i++)
                     {
-                        var section = Model.Sections[i];
+                        var sec = Model.Sections[i];
                         <div class="accordion-item bg-transparent">
                             <h2 class="accordion-header" id="heading@(i)">
                                 <button class="accordion-button @(i == 0 ? "" : "collapsed") bg-light fw-bold text-dark border-bottom" type="button" data-bs-toggle="collapse" data-bs-target="#collapse@(i)" aria-expanded="@(i == 0 ? "true" : "false")" aria-controls="collapse@(i)">
                                     <div class="d-flex flex-column w-100">
-                                        <span>@section.Title</span>
+                                        <span>@sec.Title</span>
                                         <span class="small fw-normal text-muted mt-1">
-                                            @(section.Lessons?.Count(l => l.IsCompleted) ?? 0) / @(section.Lessons?.Count ?? 0) | @(section.Lessons?.Sum(l => l.DurationInMinutes) ?? 0) min
+                                            @(sec.Lessons?.Count(l => l.IsCompleted) ?? 0) / @(sec.Lessons?.Count ?? 0) | @(sec.Lessons?.Sum(l => l.DurationInMinutes) ?? 0) min
                                         </span>
                                     </div>
                                 </button>
@@ -59,9 +59,9 @@
                             <div id="collapse@(i)" class="accordion-collapse collapse @(i == 0 ? "show" : "")" aria-labelledby="heading@(i)" data-bs-parent="#courseCurriculum">
                                 <div class="accordion-body p-0">
                                     <ul class="list-group list-group-flush">
-                                        @if (section.Lessons != null)
+                                        @if (sec.Lessons != null)
                                         {
-                                            foreach (var lesson in section.Lessons)
+                                            foreach (var lesson in sec.Lessons)
                                             {
                                                 <li class="list-group-item bg-transparent p-0">
                                                     <div class="d-flex p-3 card-hover" style="cursor: pointer;">
@@ -73,7 +73,7 @@
                                                             else
                                                             {
                                                                 <form asp-action="MarkLessonComplete" method="post" style="display:inline;">
-                                                                    <input type="hidden" name="lessonId" value="@lesson.LessonId" />
+                                                                    <input type="hidden" name="lessonId" value="@lesson.Id" />
                                                                     <input type="hidden" name="courseId" value="@Model.CourseId" />
                                                                     <button type="submit" class="btn btn-link p-0 text-muted m-0"><i class="bi bi-circle fs-5"></i></button>
                                                                 </form>

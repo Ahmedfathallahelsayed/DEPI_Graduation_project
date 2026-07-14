@@ -19,7 +19,7 @@ namespace UpSkillAPI.Controllers
         }
 
         [HttpGet("course/{courseId}/hierarchy")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AllowAnonymous]
         public async Task<IActionResult> GetCourseHierarchy(int courseId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;

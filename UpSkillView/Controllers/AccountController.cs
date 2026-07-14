@@ -19,12 +19,16 @@ namespace UpSkillView.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login()
+        public IActionResult Login(string tab = "login", string role = "Student")
         {
             if (User.Identity.IsAuthenticated)
             {
                 return RedirectToDashboard();
             }
+            
+            ViewData["ActiveTab"] = tab;
+            ViewData["Role"] = role;
+            
             return View();
         }
 
@@ -44,8 +48,9 @@ namespace UpSkillView.Controllers
             if (response.IsSuccessStatusCode)
             {
                 var responseString = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<JsonElement>(responseString);
-                var token = result.GetProperty("token").GetString();
+                
+                // The API returns the token directly as a string or quoted string
+                var token = responseString.Trim('"');
 
                 await SignInUser(token, model.RememberMe);
 
@@ -61,47 +66,78 @@ namespace UpSkillView.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View("Login", new LoginViewModel()); // Re-render login view with errors (login view contains both)
+                return View("Login", new LoginViewModel());
             }
 
             var client = _httpClientFactory.CreateClient("UpSkillAPI");
             
-            var requestData = new
+            // Map our RegisterViewModel to what the API expects (RegisterReq)
+            var requestPayload = new
             {
-                email = model.RegisterEmail,
-                password = model.RegisterPassword,
-                fullName = model.FullName,
-                country = model.Country,
-                phoneNumber = model.PhoneNumber
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Email = model.RegisterEmail,
+                Password = model.RegisterPassword,
+                MobileNumber = model.PhoneNumber
             };
 
-            var content = new StringContent(JsonSerializer.Serialize(requestData), Encoding.UTF8, "application/json");
+            var content = new StringContent(JsonSerializer.Serialize(requestPayload), Encoding.UTF8, "application/json");
 
-            string endpoint = model.RoleOptions == "Instructor" ? "api/account/register/instructor" : "api/account/register/student";
-            
-            var response = await client.PostAsync(endpoint, content);
+            HttpResponseMessage response;
+            if (model.RoleOptions == "Instructor")
+            {
+                response = await client.PostAsync("api/account/RegisterAsInstructor", content);
+            }
+            else
+            {
+                response = await client.PostAsync("api/account/RegisterAsStudent", content);
+            }
 
             if (response.IsSuccessStatusCode)
             {
-                // Auto login after register
-                var loginContent = new StringContent(JsonSerializer.Serialize(new { email = model.RegisterEmail, password = model.RegisterPassword }), Encoding.UTF8, "application/json");
-                var loginResponse = await client.PostAsync("api/account/login", loginContent);
-                
-                if (loginResponse.IsSuccessStatusCode)
-                {
-                    var responseString = await loginResponse.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<JsonElement>(responseString);
-                    var token = result.GetProperty("token").GetString();
-
-                    await SignInUser(token, false);
-                    return RedirectToDashboard();
-                }
-                
-                return RedirectToAction("Login");
+                TempData["SuccessMessage"] = "Registration successful! Please log in.";
+                return RedirectToAction("Login", new { tab = "login" });
             }
 
-            var errorResponse = await response.Content.ReadAsStringAsync();
-            ModelState.AddModelError(string.Empty, "Registration failed: " + errorResponse);
+            var errorString = await response.Content.ReadAsStringAsync();
+            
+            // Try to parse the error string to show a clean message
+            string cleanError = "An unknown error occurred.";
+            try
+            {
+                using var jsonDoc = JsonDocument.Parse(errorString);
+                if (jsonDoc.RootElement.TryGetProperty("errors", out var errorsElement))
+                {
+                    // It's a ValidationProblemDetails object
+                    var errorMessages = new List<string>();
+                    foreach (var prop in errorsElement.EnumerateObject())
+                    {
+                        if (prop.Value.ValueKind == JsonValueKind.Array)
+                        {
+                            foreach (var err in prop.Value.EnumerateArray())
+                            {
+                                errorMessages.Add(err.GetString());
+                            }
+                        }
+                    }
+                    cleanError = string.Join(" ", errorMessages);
+                }
+                else if (jsonDoc.RootElement.TryGetProperty("title", out var titleElement))
+                {
+                    cleanError = titleElement.GetString();
+                }
+                else
+                {
+                    cleanError = errorString; // Fallback to raw string if it's valid JSON but unknown format
+                }
+            }
+            catch
+            {
+                // Not valid JSON, probably a plain string
+                cleanError = errorString.Trim('"');
+            }
+
+            ModelState.AddModelError(string.Empty, $"Registration failed: {cleanError}");
             return View("Login", new LoginViewModel());
         }
 

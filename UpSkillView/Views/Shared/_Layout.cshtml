@@ -45,11 +45,15 @@
                         {
                             <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-outline-primary">Dashboard</a>
                         }
+                        
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-outline-danger">Log Out</button>
+                        </form>
                     }
                     else
                     {
                         <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary">Log In</a>
-                        <a asp-controller="Account" asp-action="Login" class="btn btn-primary">Sign Up</a>
+                        <a asp-controller="Account" asp-action="Login" asp-route-tab="register" class="btn btn-primary">Sign Up</a>
                     }
                 </div>
             </div>

@@ -35,11 +35,11 @@ namespace UpSkillView.Controllers
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                var courses = JsonSerializer.Deserialize<List<StudentEnrolledCourseDto>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                return View(courses ?? new List<StudentEnrolledCourseDto>());
+                var courses = JsonSerializer.Deserialize<List<MyCourseDto>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                return View(courses ?? new List<MyCourseDto>());
             }
 
-            return View(new List<StudentEnrolledCourseDto>());
+            return View(new List<MyCourseDto>());
         }
 
         public async Task<IActionResult> MyCourses()
@@ -50,23 +50,35 @@ namespace UpSkillView.Controllers
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                var courses = JsonSerializer.Deserialize<List<StudentEnrolledCourseDto>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                return View(courses ?? new List<StudentEnrolledCourseDto>());
+                var courses = JsonSerializer.Deserialize<List<MyCourseDto>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                return View(courses ?? new List<MyCourseDto>());
             }
 
-            return View(new List<StudentEnrolledCourseDto>());
+            return View(new List<MyCourseDto>());
         }
 
         public async Task<IActionResult> CoursePlayer(int id)
         {
             var client = GetAuthenticatedClient();
-            var response = await client.GetAsync($"api/StudentLearning/course/{id}/hierarchy");
+            var hierarchyResponse = await client.GetAsync($"api/StudentLearning/course/{id}/hierarchy");
+            var detailsResponse = await client.GetAsync($"api/StudentLearning/courses/{id}");
 
-            if (response.IsSuccessStatusCode)
+            if (hierarchyResponse.IsSuccessStatusCode && detailsResponse.IsSuccessStatusCode)
             {
-                var content = await response.Content.ReadAsStringAsync();
-                var hierarchy = JsonSerializer.Deserialize<CourseHierarchyDto>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                return View(hierarchy);
+                var hierarchyContent = await hierarchyResponse.Content.ReadAsStringAsync();
+                var sections = JsonSerializer.Deserialize<List<SectionDto>>(hierarchyContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                var detailsContent = await detailsResponse.Content.ReadAsStringAsync();
+                var details = JsonSerializer.Deserialize<StudentCourseDetailsDto>(detailsContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                var vm = new UpSkillView.Models.CoursePlayerViewModel
+                {
+                    CourseId = id,
+                    CourseTitle = details?.Title ?? "Course",
+                    ProgressPercentage = details?.ProgressPercent ?? 0,
+                    Sections = sections ?? new List<SectionDto>()
+                };
+                return View(vm);
             }
 
             return RedirectToAction("Dashboard");

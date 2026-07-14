@@ -1,6 +1,6 @@
-@model Application.CourseContent.DTOs.StudentCourseDetailsDto
+@model UpSkillView.Models.CourseDetailsViewModel
 @{
-    ViewData["Title"] = Model.Title;
+    ViewData["Title"] = Model.Details.Title;
 }
 
 <!-- Course Header -->
@@ -11,40 +11,40 @@
                 <!-- Breadcrumb -->
                 <nav aria-label="breadcrumb" class="mb-3">
                     <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a asp-action="Index" class="text-white-50 text-decoration-none">Courses</a></li>
-                        <li class="breadcrumb-item"><a href="#" class="text-white-50 text-decoration-none">@Model.CategoryName</a></li>
-                        <li class="breadcrumb-item active text-white" aria-current="page">@Model.Title</li>
+                        <li class="breadcrumb-item"><a asp-action="Index" class="text-muted text-decoration-none">Courses</a></li>
+                        <li class="breadcrumb-item"><a href="#" class="text-muted text-decoration-none">@Model.Details.CategoryName</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">@Model.Details.Title</li>
                     </ol>
                 </nav>
 
-                <h1 class="display-5 fw-bold mb-3">@Model.Title</h1>
-                <p class="lead mb-4 opacity-75">@Model.Description</p>
-
-                <div class="d-flex flex-wrap align-items-center gap-4 mb-4">
+                <h1 class="display-5 fw-bold mb-3">@Model.Details.Title</h1>
+                <p class="lead text-muted mb-4">@Model.Details.FullDescription</p>
+                
+                <div class="d-flex flex-wrap gap-4 align-items-center text-muted mb-4">
                     <div class="d-flex align-items-center">
-                        <i class="bi bi-person-circle fs-4 me-2"></i>
-                        <span>Created by <a href="#" class="text-white text-decoration-none text-decoration-underline-hover">@Model.InstructorName</a></span>
+                        <img src="https://ui-avatars.com/api/?name=@(Uri.EscapeDataString(Model.Details.InstructorSummary ?? "Instructor"))&background=random" class="rounded-circle me-2" width="40" height="40" alt="Instructor">
+                        <span>By <strong class="text-dark">@Model.Details.InstructorSummary</strong></span>
                     </div>
                 </div>
             </div>
             
-            <div class="col-lg-4 mt-4 mt-lg-0">
-                <div class="card text-dark shadow-lg">
-                    <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="Course Image">
+            <div class="col-lg-4 text-center text-lg-end mt-4 mt-lg-0">
+                <div class="card border-0 shadow-sm">
                     <div class="card-body p-4">
-                        <h2 class="fw-bold mb-4">$@Model.Price.ToString("0.00")</h2>
+                        <h2 class="fw-bold mb-3">$@Model.Details.Price.ToString("0.00")</h2>
                         
-                        @if (Model.IsEnrolled)
+                        @if (Model.Details.IsEnrolled)
                         {
-                            <a asp-controller="Student" asp-action="CoursePlayer" asp-route-id="@Model.CourseId" class="btn btn-success w-100 py-3 fw-bold mb-3">Go to Course</a>
+                            <a asp-controller="Student" asp-action="CoursePlayer" asp-route-id="@Model.Details.CourseId" class="btn btn-success btn-lg w-100 mb-3">Continue Learning</a>
                         }
                         else
                         {
                             <form asp-controller="Student" asp-action="Enroll" method="post">
-                                <input type="hidden" name="courseId" value="@Model.CourseId" />
-                                <button type="submit" class="btn btn-primary w-100 py-3 fw-bold mb-3">Enroll Now</button>
+                                <input type="hidden" name="courseId" value="@Model.Details.CourseId" />
+                                <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">Enroll Now</button>
                             </form>
                         }
+                        <small class="text-muted"><i class="bi bi-shield-check me-1"></i>30-Day Money-Back Guarantee</small>
                     </div>
                 </div>
             </div>
@@ -64,31 +64,31 @@
                     {
                         for (int i = 0; i < Model.Sections.Count; i++)
                         {
-                            var section = Model.Sections[i];
+                            var sec = Model.Sections[i];
                             <div class="accordion-item">
                                 <h2 class="accordion-header" id="heading@(i)">
                                     <button class="accordion-button @(i == 0 ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#collapse@(i)" aria-expanded="@(i == 0 ? "true" : "false")" aria-controls="collapse@(i)">
                                         <div class="w-100 d-flex justify-content-between align-items-center pe-3">
-                                            <strong>@section.Title</strong>
-                                            <span class="text-muted small fw-normal">@(section.Lessons?.Count ?? 0) lectures</span>
+                                            <strong>@sec.Title</strong>
+                                            <span class="text-muted small fw-normal">@(sec.Lessons?.Count ?? 0) lectures</span>
                                         </div>
                                     </button>
                                 </h2>
                                 <div id="collapse@(i)" class="accordion-collapse collapse @(i == 0 ? "show" : "")" aria-labelledby="heading@(i)" data-bs-parent="#courseCurriculum">
                                     <div class="accordion-body p-0">
                                         <ul class="list-group list-group-flush">
-                                            @if (section.Lessons != null)
+                                            @if (sec.Lessons != null)
                                             {
-                                                foreach (var lesson in section.Lessons)
+                                                foreach (var lesson in sec.Lessons)
                                                 {
                                                     <li class="list-group-item d-flex justify-content-between align-items-center p-3">
                                                         <div class="d-flex align-items-center">
-                                                            <i class="bi bi-play-circle-fill text-muted me-3 fs-5"></i>
+                                                            <i class="bi @(lesson.ContentType == Domain.Enum.LessonContentType.Video ? "bi-play-circle-fill text-primary" : "bi-file-text-fill text-info") me-3 fs-5"></i>
                                                             <span class="text-dark">@lesson.Title</span>
                                                         </div>
-                                                        @if (lesson.IsFreePreview)
+                                                        @if (lesson.IsPreview)
                                                         {
-                                                            <a href="#" class="text-primary text-decoration-none small">Preview</a>
+                                                            <a href="#" class="text-primary text-decoration-none small fw-bold">Preview</a>
                                                         }
                                                     </li>
                                                 }

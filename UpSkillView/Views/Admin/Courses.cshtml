@@ -1,0 +1,64 @@
+@model List<Application.Courses.DTOs.Course.CourseResponseDto>
+@{
+    ViewData["Title"] = "Pending Courses";
+    Layout = "_DashboardLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-1">Pending Courses</h2>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Course Title</th>
+                        <th>Instructor</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var course in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div>
+                                            <h6 class="mb-0 fw-bold">@course.Title</h6>
+                                            <small class="text-muted">$@course.Price.ToString("0.00")</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="text-muted">@course.InstructorName</span></td>
+                                <td>@course.CategoryName</td>
+                                <td><span class="badge bg-warning text-dark">Pending</span></td>
+                                <td class="text-end pe-4">
+                                    <form asp-action="Approve" method="post" class="d-inline-block">
+                                        <input type="hidden" name="id" value="@course.Id" />
+                                        <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                    </form>
+                                    <form asp-action="Publish" method="post" class="d-inline-block">
+                                        <input type="hidden" name="id" value="@course.Id" />
+                                        <button type="submit" class="btn btn-sm btn-primary">Publish</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">No pending courses found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

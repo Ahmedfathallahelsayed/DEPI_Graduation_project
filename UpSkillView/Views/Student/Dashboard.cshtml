@@ -1,4 +1,4 @@
-@model List<Application.CourseContent.DTOs.StudentEnrolledCourseDto>
+@model List<Application.CourseContent.DTOs.MyCourseDto>
 @{
     ViewData["Title"] = "Student Dashboard";
     Layout = "_DashboardLayout";
@@ -23,7 +23,7 @@
                         <i class="bi bi-play-circle-fill"></i>
                     </div>
                 </div>
-                <h3 class="fw-bold mb-0">@Model.Count(c => c.ProgressPercentage < 100)</h3>
+                <h3 class="fw-bold mb-0">@Model.Count(c => c.ProgressPercent < 100)</h3>
             </div>
         </div>
     </div>
@@ -36,7 +36,7 @@
                         <i class="bi bi-check-circle-fill"></i>
                     </div>
                 </div>
-                <h3 class="fw-bold mb-0">@Model.Count(c => c.ProgressPercentage == 100)</h3>
+                <h3 class="fw-bold mb-0">@Model.Count(c => c.ProgressPercent == 100)</h3>
             </div>
         </div>
     </div>
@@ -56,15 +56,14 @@
                         <h5 class="card-title text-truncate">
                             <a asp-action="CoursePlayer" asp-route-id="@course.CourseId" class="text-dark text-decoration-none">@course.Title</a>
                         </h5>
-                        <p class="text-muted small mb-3">@course.InstructorName</p>
                         
                         <div class="mt-auto">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="small fw-medium">@(course.ProgressPercentage)% Complete</span>
-                                <span class="small text-muted">@course.CompletedLessonsCount / @course.TotalLessonsCount Lessons</span>
+                                <span class="small fw-medium">@(course.ProgressPercent)% Complete</span>
+                                <span class="small text-muted">@course.CompletionStatusDisplay</span>
                             </div>
                             <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-primary" role="progressbar" style="width: @(course.ProgressPercentage)%;" aria-valuenow="@(course.ProgressPercentage)" aria-valuemin="0" aria-valuemax="100"></div>
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: @(course.ProgressPercent)%;" aria-valuenow="@(course.ProgressPercent)" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
                         </div>
                     </div>

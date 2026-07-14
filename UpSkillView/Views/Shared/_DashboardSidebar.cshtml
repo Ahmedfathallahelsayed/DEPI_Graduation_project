@@ -44,6 +44,11 @@
                         <i class="bi bi-journal-check nav-icon"></i> Courses
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a asp-controller="Admin" asp-action="Categories" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Categories" ? "active" : "")">
+                        <i class="bi bi-tags nav-icon"></i> Categories
+                    </a>
+                </li>
             }
         </ul>
     </div>

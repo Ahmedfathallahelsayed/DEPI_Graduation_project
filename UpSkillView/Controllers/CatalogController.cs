@@ -31,11 +31,11 @@ namespace UpSkillView.Controllers
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                var courses = JsonSerializer.Deserialize<List<StudentCatalogCourseDto>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                return View(courses ?? new List<StudentCatalogCourseDto>());
+                var courses = JsonSerializer.Deserialize<List<StudentCourseSummaryDto>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                return View(courses ?? new List<StudentCourseSummaryDto>());
             }
 
-            return View(new List<StudentCatalogCourseDto>());
+            return View(new List<StudentCourseSummaryDto>());
         }
 
         public async Task<IActionResult> Details(int id)
@@ -49,12 +49,25 @@ namespace UpSkillView.Controllers
             }
 
             var response = await client.GetAsync($"api/StudentLearning/courses/{id}");
+            var hierarchyResponse = await client.GetAsync($"api/StudentLearning/course/{id}/hierarchy");
 
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
                 var details = JsonSerializer.Deserialize<StudentCourseDetailsDto>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                return View(details);
+
+                List<SectionDto> sections = new List<SectionDto>();
+                if (hierarchyResponse.IsSuccessStatusCode)
+                {
+                    var hContent = await hierarchyResponse.Content.ReadAsStringAsync();
+                    sections = JsonSerializer.Deserialize<List<SectionDto>>(hContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<SectionDto>();
+                }
+                
+                var vm = new UpSkillView.Models.CourseDetailsViewModel {
+                    Details = details,
+                    Sections = sections
+                };
+                return View(vm);
             }
 
             return RedirectToAction("Index");

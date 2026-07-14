@@ -8,9 +8,10 @@ namespace UpSkillView.Models.Auth
         public string RoleOptions { get; set; } // "Student" or "Instructor"
 
         [Required]
-        public string FullName { get; set; }
+        public string FirstName { get; set; }
 
-        public string Country { get; set; }
+        [Required]
+        public string LastName { get; set; }
         
         public string PhoneNumber { get; set; }
 
