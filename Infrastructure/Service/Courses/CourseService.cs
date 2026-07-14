@@ -134,6 +134,11 @@ namespace Infrastructure.Service.Courses
             course.Level            = dto.Level;
             course.Language         = dto.Language.Trim();
             course.ThumbnailUrl     = thumbnailUrl;
+
+            // Reset status to Draft and revoke approval if course is modified
+            course.Status           = CourseStatus.Draft;
+            course.IsApproved       = false;
+            
             course.UpdatedAt        = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -181,6 +186,8 @@ namespace Infrastructure.Service.Courses
             var course = await _context.Courses
                 .Include(c => c.Category)
                 .Include(c => c.Enrollments)
+                .Include(c => c.CourseSections)
+                    .ThenInclude(s => s.Lessons)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (course is null)
@@ -282,16 +289,33 @@ namespace Infrastructure.Service.Courses
         private static string? ValidateForPublishing(Course course)
         {
             if (string.IsNullOrWhiteSpace(course.Title))
-                return "Course must have a title before publishing.";
+                return "Course must have a title before submitting for review.";
+
+            if (string.IsNullOrWhiteSpace(course.ShortDescription))
+                return "Course must have a short description before submitting for review.";
 
             if (string.IsNullOrWhiteSpace(course.Description))
-                return "Course must have a description before publishing.";
+                return "Course must have a description before submitting for review.";
+
+            if (string.IsNullOrWhiteSpace(course.Language))
+                return "Course must have a language before submitting for review.";
 
             if (course.Price < 0)
                 return "Course price cannot be negative.";
 
             if (course.CategoryId <= 0)
-                return "Course must be assigned to a category before publishing.";
+                return "Course must be assigned to a category before submitting for review.";
+
+            var sections = course.CourseSections?.OrderBy(s => s.DisplayOrder).ToList() ?? [];
+            if (sections.Count == 0)
+                return "Course must have at least one section before submitting for review.";
+
+            foreach (var section in sections)
+            {
+                var lessons = section.Lessons?.ToList() ?? [];
+                if (lessons.Count == 0)
+                    return $"Section '{section.Title}' must contain at least one lesson before submitting for review.";
+            }
 
             return null;
         }
