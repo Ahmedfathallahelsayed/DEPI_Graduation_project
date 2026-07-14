@@ -21,15 +21,18 @@
     <div class="row g-0">
         <!-- Main Content Area -->
         <div class="col-lg-9 d-flex flex-column" style="min-height: calc(100vh - 64px);">
-            <!-- Video Player Placeholder -->
-            <div class="bg-black flex-grow-1 d-flex align-items-center justify-content-center position-relative">
-                <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Video Placeholder" class="img-fluid opacity-50 w-100 h-100" style="object-fit: cover; position: absolute; top:0; left:0;">
-                <div class="position-relative text-center" style="z-index: 10;">
-                    <button class="btn btn-primary rounded-circle p-3 mb-3 shadow" style="width: 80px; height: 80px;">
-                        <i class="bi bi-play-fill fs-1 ms-1"></i>
-                    </button>
-                    <h3 class="text-white drop-shadow">Select a lesson to begin</h3>
+            <!-- Video Player -->
+            <div class="bg-black flex-grow-1 d-flex align-items-center justify-content-center position-relative w-100 h-100" id="videoContainer">
+                <div id="videoPlaceholder" class="w-100 h-100 d-flex flex-column align-items-center justify-content-center">
+                    <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Video Placeholder" class="img-fluid opacity-50 w-100 h-100" style="object-fit: cover; position: absolute; top:0; left:0;">
+                    <div class="position-relative text-center" style="z-index: 10;">
+                        <button class="btn btn-primary rounded-circle p-3 mb-3 shadow" style="width: 80px; height: 80px;">
+                            <i class="bi bi-play-fill fs-1 ms-1"></i>
+                        </button>
+                        <h3 class="text-white drop-shadow">Select a lesson to begin</h3>
+                    </div>
                 </div>
+                <iframe id="mainVideoPlayer" class="w-100 h-100 d-none" style="position: absolute; top:0; left:0; border: none;" src="" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
             </div>
         </div>
 
@@ -64,7 +67,7 @@
                                             foreach (var lesson in sec.Lessons)
                                             {
                                                 <li class="list-group-item bg-transparent p-0">
-                                                    <div class="d-flex p-3 card-hover" style="cursor: pointer;">
+                                                    <div class="d-flex p-3 card-hover" style="cursor: pointer;" onclick="playVideo('@lesson.VideoUrl')">
                                                         <div class="me-3">
                                                             @if (lesson.IsCompleted)
                                                             {
@@ -113,4 +116,15 @@
         footer { display: none !important; }
         main { padding: 0 !important; }
     </style>
+    <script>
+        function playVideo(videoUrl) {
+            if (!videoUrl) {
+                return; // Optionally show an alert if no video URL exists
+            }
+            document.getElementById('videoPlaceholder').classList.add('d-none');
+            var iframe = document.getElementById('mainVideoPlayer');
+            iframe.src = videoUrl;
+            iframe.classList.remove('d-none');
+        }
+    </script>
 }

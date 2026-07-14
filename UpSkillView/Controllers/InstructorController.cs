@@ -112,5 +112,46 @@ namespace UpSkillView.Controllers
             
             return View(model);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> ManageContent(int id)
+        {
+            var client = GetAuthenticatedClient();
+            var response = await client.GetAsync($"api/CourseContent/course/{id}/sections");
+            
+            var vm = new UpSkillView.Models.Instructor.ManageContentViewModel { CourseId = id };
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var sections = JsonSerializer.Deserialize<List<Application.CourseContent.DTOs.SectionDto>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (sections != null)
+                {
+                    vm.Sections = sections;
+                }
+            }
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateSection([FromBody] Application.CourseContent.DTOs.CreateSectionDto dto)
+        {
+            var client = GetAuthenticatedClient();
+            var response = await client.PostAsJsonAsync("api/CourseContent/sections", dto);
+            if (response.IsSuccessStatusCode)
+                return Ok();
+            return BadRequest(await response.Content.ReadAsStringAsync());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateLesson([FromBody] Application.CourseContent.DTOs.CreateLessonDto dto)
+        {
+            var client = GetAuthenticatedClient();
+            var response = await client.PostAsJsonAsync("api/CourseContent/lessons", dto);
+            if (response.IsSuccessStatusCode)
+                return Ok();
+            return BadRequest(await response.Content.ReadAsStringAsync());
+        }
     }
 }
