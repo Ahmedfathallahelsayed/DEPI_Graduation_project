@@ -57,12 +57,13 @@ namespace Infrastructure
 
             // Add DbContext Connection
             services.AddDbContext<AppDBContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("MostafaCon")));
+            options.UseSqlServer(configuration.GetConnectionString("ConnectDBS")));
 
             // Adding Identity
             services.AddIdentity<AppUser, IdentityRole>()
                     .AddEntityFrameworkStores<AppDBContext>()
                     .AddDefaultTokenProviders();
+
 
             // Registering Services in DI
             services.AddScoped<ITokenService, TokenService>();

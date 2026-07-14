@@ -15,11 +15,18 @@ namespace UpSkillView
             builder.Services.AddControllersWithViews();
 
             // Register AppApi HttpClient by appsettings
-            builder.Services.AddHttpClient("DrugFinderAPI", client =>
+            builder.Services.AddHttpClient("UpSkillAPI", client =>
             {
                 client.BaseAddress = new Uri(
                     builder.Configuration["ApiSettings:BaseUrl"]
-                    ?? "http://localhost:5080");
+                    ?? "https://localhost:7209");
+            });
+
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromHours(1);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
             });
 
             // Register Authentication session
@@ -105,7 +112,9 @@ namespace UpSkillView
             app.UseStaticFiles();
 
             app.UseRouting();
+            app.UseSession();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllerRoute(

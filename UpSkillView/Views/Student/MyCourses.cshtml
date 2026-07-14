@@ -1,0 +1,50 @@
+@model List<Application.CourseContent.DTOs.StudentEnrolledCourseDto>
+@{
+    ViewData["Title"] = "My Courses";
+    Layout = "_DashboardLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-1">My Courses</h2>
+    <a asp-controller="Catalog" asp-action="Index" class="btn btn-primary d-none d-sm-inline-block">Browse Catalog</a>
+</div>
+
+<div class="row g-4">
+    @if (Model != null && Model.Any())
+    {
+        foreach (var course in Model)
+        {
+            <div class="col-md-6 col-xl-4">
+                <div class="card h-100 border-0 shadow-sm card-hover">
+                    <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="Course Image" style="height: 160px; object-fit: cover;">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-truncate">
+                            <a asp-action="CoursePlayer" asp-route-id="@course.CourseId" class="text-dark text-decoration-none">@course.Title</a>
+                        </h5>
+                        <p class="text-muted small mb-3">@course.InstructorName</p>
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="small fw-medium">@(course.ProgressPercentage)% Complete</span>
+                                <span class="small text-muted">@course.CompletedLessonsCount / @course.TotalLessonsCount Lessons</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: @(course.ProgressPercentage)%;" aria-valuenow="@(course.ProgressPercentage)" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top-0 pt-0 pb-3">
+                        <a asp-action="CoursePlayer" asp-route-id="@course.CourseId" class="btn btn-outline-primary w-100 btn-sm">Resume Course</a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12 text-center py-5">
+            <h5 class="text-muted">You are not enrolled in any courses yet.</h5>
+            <a asp-controller="Catalog" asp-action="Index" class="btn btn-primary mt-3">Explore Courses</a>
+        </div>
+    }
+</div>
