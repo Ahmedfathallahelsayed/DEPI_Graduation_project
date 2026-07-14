@@ -16,14 +16,23 @@
             }
             else if(User.IsInRole("Instructor"))
             {
+                var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
                 <li class="nav-item">
-                    <a asp-controller="Instructor" asp-action="Dashboard" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "active" : "")">
+                    <a asp-controller="Instructor" asp-action="Dashboard"
+                       class="nav-link @(currentAction == "Dashboard" ? "active" : "")">
                         <i class="bi bi-grid nav-icon"></i> Dashboard
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a asp-controller="Instructor" asp-action="MyCourses" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "MyCourses" ? "active" : "")">
+                    <a asp-controller="Instructor" asp-action="MyCourses"
+                       class="nav-link @(currentAction == "MyCourses" || currentAction == "EditCourse" ? "active" : "")">
                         <i class="bi bi-journal-code nav-icon"></i> My Courses
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a asp-controller="Instructor" asp-action="CreateCourse"
+                       class="nav-link @(currentAction == "CreateCourse" ? "active" : "")">
+                        <i class="bi bi-plus-circle nav-icon"></i> Create Course
                     </a>
                 </li>
             }

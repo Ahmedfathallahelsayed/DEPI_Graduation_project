@@ -4,10 +4,14 @@ using Application.Identity;
 using Application.JWT;
 using Infrastructure.Persistance;
 using Infrastructure.Persistance.DbContext;
+using Infrastructure.Repo.Contracts;
+using Infrastructure.Repo.Implementation;
 using Infrastructure.Service.Account;
 using Infrastructure.Service.Courses;
+using Infrastructure.Service.FileService;
 using Infrastructure.Services.Identity;
 using Infrastructure.Services.JWT;
+using Infrastructure.UnitOfWork;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -88,6 +92,28 @@ namespace Infrastructure
                 };
             });
 
+            // Add DbContext Connection
+            services.AddDbContext<AppDBContext>(options =>
+            options.UseSqlServer(configuration.GetConnectionString("MoneerCon")));
+
+            // Registering Repos contracts
+            services.AddScoped<ICategory, CategoryRepo>();
+            services.AddScoped<ICertificate, CertificateRepo>();
+            services.AddScoped<ICourse, CourseRepo>();
+            services.AddScoped<ICourseSection, CourseSectionRepo>();
+            services.AddScoped<IEnrollment, EnrollmentRepo>();
+            services.AddScoped<ILesson, LessonRepo>();
+            services.AddScoped<ILessonProgress, LessonProgressRepo>();
+            services.AddScoped<IOrder, OrderRepo>();
+            services.AddScoped<IOrderItem, OrderItemRepo>();
+
+            // Registering Unit of Work
+            services.AddScoped<IUnitOfWork, UnitOfWork.UnitOfWork>();
+            // Adding Identity
+            services.AddIdentity<AppUser, IdentityRole>()
+                    .AddEntityFrameworkStores<AppDBContext>()
+                    .AddDefaultTokenProviders();
+
 
             // Registering Services in DI
             services.AddScoped<ITokenService, TokenService>();
@@ -100,6 +126,9 @@ namespace Infrastructure
             // Course Module Services (Team Member 2)
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<ICourseService, CourseService>();
+            services.AddScoped<ICourseSectionService, CourseSectionService>();
+            services.AddScoped<ILessonService, LessonService>();
+            services.AddScoped<IStudentFlowService, StudentFlowService>();
 
             // Admin Module Services (Team Member 5)
             services.AddScoped<IAdminService, AdminService>();
@@ -110,6 +139,7 @@ namespace Infrastructure
 
             services.AddScoped<Application.CourseContent.Interfaces.IStudentLearningService,
                 Infrastructure.Service.CourseContent.StudentLearningService>();
+
 
             return services;
         }

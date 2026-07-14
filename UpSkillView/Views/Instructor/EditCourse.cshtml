@@ -1,0 +1,262 @@
+@model UpSkillView.Models.Instructor.EditCourseViewModel
+@using Application.Courses.DTOs.Category
+@{
+    ViewData["Title"] = "Edit Course";
+    Layout = "_DashboardLayout";
+    var categories = ViewBag.Categories as List<CategoryResponseDto> ?? new List<CategoryResponseDto>();
+}
+
+<form asp-action="EditCourse" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="ExistingThumbnailUrl" />
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-controller="Instructor" asp-action="MyCourses" class="text-decoration-none">My Courses</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Edit Course</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-3">
+        <div>
+            <h2 class="mb-1">Edit Course</h2>
+            <p class="text-muted mb-0">Update the details for <strong>@Model.CourseTitle</strong>.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="MyCourses" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg me-1"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save me-1"></i> Save Changes
+            </button>
+        </div>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <div asp-validation-summary="ModelOnly"></div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Wizard Tabs -->
+    <ul class="nav nav-pills mb-4 bg-white p-2 rounded shadow-sm border" id="editCourseTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="edit-basic-tab" data-bs-toggle="pill"
+                    data-bs-target="#edit-basic" type="button" role="tab" aria-selected="true">
+                <i class="bi bi-1-circle me-1"></i> Basic Info
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="edit-details-tab" data-bs-toggle="pill"
+                    data-bs-target="#edit-details" type="button" role="tab" aria-selected="false">
+                <i class="bi bi-2-circle me-1"></i> Details &amp; Media
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="editCourseTabsContent">
+
+        <!-- ── Step 1: Basic Info ───────────────────────────────────────── -->
+        <div class="tab-pane fade show active" id="edit-basic" role="tabpanel">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="mb-4"><i class="bi bi-info-circle me-2 text-primary"></i>Course Information</h5>
+
+                    <div class="mb-4">
+                        <label asp-for="CourseTitle" class="form-label">
+                            Course Title <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="CourseTitle" class="form-control"
+                               placeholder="e.g. Learn Python from Scratch" />
+                        <span asp-validation-for="CourseTitle" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="CourseSubtitle" class="form-label">
+                            Course Subtitle <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="CourseSubtitle" class="form-control"
+                               placeholder="e.g. Master Python 3 with real-world projects" />
+                        <span asp-validation-for="CourseSubtitle" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="CourseDescription" class="form-label">
+                            Course Description <span class="text-danger">*</span>
+                        </label>
+                        <textarea asp-for="CourseDescription" class="form-control" rows="7"
+                                  placeholder="Provide a detailed description of your course..."></textarea>
+                        <span asp-validation-for="CourseDescription" class="text-danger small"></span>
+                    </div>
+
+                    <div class="text-end mt-4">
+                        <button type="button" class="btn btn-primary"
+                                onclick="document.getElementById('edit-details-tab').click()">
+                            Next: Details &amp; Media <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Step 2: Details & Media ─────────────────────────────────── -->
+        <div class="tab-pane fade" id="edit-details" role="tabpanel">
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h5 class="mb-4"><i class="bi bi-tags me-2 text-primary"></i>Category &amp; Pricing</h5>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="CategoryId" class="form-label">
+                                Category <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="CategoryId" class="form-select">
+                                <option value="">— Select a category —</option>
+                                @foreach (var cat in categories)
+                                {
+                                    <option value="@cat.Id"
+                                            selected="@(cat.Id == Model.CategoryId ? "selected" : null)">
+                                        @cat.Name
+                                    </option>
+                                }
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="Level" class="form-label">
+                                Level <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Level" class="form-select">
+                                <option value="3" selected="@(Model.Level == 3 ? "selected" : null)">All Levels</option>
+                                <option value="0" selected="@(Model.Level == 0 ? "selected" : null)">Beginner</option>
+                                <option value="1" selected="@(Model.Level == 1 ? "selected" : null)">Intermediate</option>
+                                <option value="2" selected="@(Model.Level == 2 ? "selected" : null)">Advanced</option>
+                            </select>
+                            <span asp-validation-for="Level" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="Price" class="form-label">
+                                Price (USD) <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="Price" type="number" step="0.01" min="0"
+                                       class="form-control" placeholder="0.00" />
+                            </div>
+                            <span asp-validation-for="Price" class="text-danger small"></span>
+                            <div class="form-text">Set to 0 for a free course.</div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="Language" class="form-label">
+                                Language <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Language" class="form-select">
+                                <option value="English" selected="@(Model.Language == "English" ? "selected" : null)">English</option>
+                                <option value="Arabic"  selected="@(Model.Language == "Arabic"  ? "selected" : null)">Arabic</option>
+                                <option value="Spanish" selected="@(Model.Language == "Spanish" ? "selected" : null)">Spanish</option>
+                                <option value="French"  selected="@(Model.Language == "French"  ? "selected" : null)">French</option>
+                            </select>
+                            <span asp-validation-for="Language" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="mb-4"><i class="bi bi-image me-2 text-primary"></i>Course Thumbnail</h5>
+
+                    <div class="row align-items-center mb-4">
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <div class="rounded overflow-hidden" style="height:180px; border:2px dashed var(--border-color);">
+                                @if (!string.IsNullOrEmpty(Model.ExistingThumbnailUrl))
+                                {
+                                    <img id="previewImg" src="@Model.ExistingThumbnailUrl"
+                                         alt="Current Thumbnail"
+                                         style="width:100%; height:100%; object-fit:cover;" />
+                                }
+                                else
+                                {
+                                    <div class="d-flex align-items-center justify-content-center text-muted h-100">
+                                        <div class="text-center">
+                                            <i class="bi bi-image fs-1 d-block mb-2"></i>
+                                            <span class="small">No image yet</span>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <p class="text-muted small mb-1">
+                                Upload a <strong>new</strong> thumbnail to replace the current one.
+                                Leave blank to keep the existing image.
+                            </p>
+                            <p class="text-muted small mb-2">
+                                Recommended: <strong>750×422px</strong> · jpg, jpeg, gif, png
+                            </p>
+                            <input asp-for="CourseImage" type="file" class="form-control"
+                                   accept="image/*" id="thumbnailInput" />
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning d-flex align-items-center" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <small>
+                            Saving changes will reset this course's status back to <strong>Draft</strong>
+                            and it will need to be re-submitted for admin review.
+                        </small>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-3">
+                        <button type="button" class="btn btn-outline-secondary"
+                                onclick="document.getElementById('edit-basic-tab').click()">
+                            <i class="bi bi-arrow-left me-1"></i> Previous
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+        // Live thumbnail preview on file selection
+        document.getElementById('thumbnailInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (ev) {
+                    let img = document.getElementById('previewImg');
+                    if (!img) {
+                        // No existing image — create one
+                        img = document.createElement('img');
+                        img.id = 'previewImg';
+                        img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+                        const container = document.querySelector('#thumbnailInput').closest('.row')
+                                            .querySelector('.rounded');
+                        container.innerHTML = '';
+                        container.appendChild(img);
+                    }
+                    img.src = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+}

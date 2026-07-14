@@ -87,5 +87,11 @@ namespace Infrastructure.Services.Identity
 
             return roles.ToList();
         }
+
+        public async Task<string> GetUserFullNameAsync(string userId)
+        {
+            var user = await UserManager.FindByIdAsync(userId);
+            return user?.FullName ?? "Unknown";
+        }
     }
 }

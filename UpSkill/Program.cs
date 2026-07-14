@@ -48,6 +48,9 @@ namespace UpSkill
                         new string[] {}
                     }
                 });
+
+                // Resolve conflicting DTO class names by using their fully qualified names as schema IDs
+                options.CustomSchemaIds(type => type.FullName);
             });
 
             // CORS By app settings

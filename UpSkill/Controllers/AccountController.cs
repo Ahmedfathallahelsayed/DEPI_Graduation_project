@@ -23,7 +23,7 @@ namespace UpSkillAPI.Controllers
             this.accountService = accountService;
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+        
         [HttpPost("CreateRole")]
         public async Task<IActionResult> CreateRole([FromBody] string roleName)
         {

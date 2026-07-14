@@ -1,43 +1,45 @@
 using Application.Common;
 using Application.Courses.DTOs.Course;
 using Application.Courses.Interfaces;
+using Application.Identity;
 using Domain.Entity;
 using Domain.Enum;
-using Infrastructure.Persistance;
-using Infrastructure.Persistance.DbContext;
+using Infrastructure.UnitOfWork;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Infrastructure.Service.Courses
 {
     /// <summary>
-    /// Implements ICourseService using EF Core.
+    /// Implements ICourseService using Unit of Work and Repositories.
     /// Handles course CRUD, thumbnail upload to wwwroot/thumbnails/, and publish toggling.
     /// </summary>
     public class CourseService : ICourseService
     {
-        private readonly AppDBContext _context;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IWebHostEnvironment _env;
+        private readonly IUserService _userService;
 
-        public CourseService(AppDBContext context, IWebHostEnvironment env)
+        public CourseService(IUnitOfWork unitOfWork, IWebHostEnvironment env, IUserService userService)
         {
-            _context = context;
-            _env     = env;
+            _unitOfWork  = unitOfWork;
+            _env         = env;
+            _userService = userService;
         }
 
         // ── GET BY INSTRUCTOR (Dashboard) ────────────────────────────────────
 
         public async Task<Result<IEnumerable<CourseSummaryDto>>> GetByInstructorAsync(string instructorId)
         {
-            var courses = await _context.Courses
-                .Include(c => c.Category)
-                .Include(c => c.Enrollments)
-                .Where(c => c.InstructorId == instructorId)
-                .OrderByDescending(c => c.CreatedAt)
-                .ToListAsync();
+            var courses = await _unitOfWork.CourseRepo.GetByInstructorAsync(instructorId);
+            var instructorName = await _userService.GetUserFullNameAsync(instructorId);
 
-            var dtos = courses.Select(c => MapToSummary(c, c.Category?.Name ?? "", ""));
+            var dtos = courses.Select(c => MapToSummary(c, c.Category?.Name ?? "", instructorName));
             return Result<IEnumerable<CourseSummaryDto>>.Success(dtos);
         }
 
@@ -45,11 +47,7 @@ namespace Infrastructure.Service.Courses
 
         public async Task<Result<CourseResponseDto>> GetByIdAsync(int id, string? instructorId = null)
         {
-            var course = await _context.Courses
-                .Include(c => c.Category)
-                .Include(c => c.Enrollments)
-                .Include(c => c.CourseSections)
-                .FirstOrDefaultAsync(c => c.Id == id);
+            var course = await _unitOfWork.CourseRepo.GetByIdWithDetailsAsync(id);
 
             if (course is null)
                 return Result<CourseResponseDto>.Failure($"Course with ID {id} was not found.");
@@ -58,9 +56,8 @@ namespace Infrastructure.Service.Courses
             if (instructorId != null && course.InstructorId != instructorId)
                 return Result<CourseResponseDto>.Failure("You are not authorized to view this course.");
 
-            // Fetch instructor name from AppUsers
-            var instructor = await _context.Users.FindAsync(course.InstructorId);
-            var instructorName = instructor is AppUser appUser ? appUser.FullName : "Unknown";
+            // Fetch instructor name
+            var instructorName = await _userService.GetUserFullNameAsync(course.InstructorId);
 
             return Result<CourseResponseDto>.Success(MapToResponse(course, course.Category?.Name ?? "", instructorName));
         }
@@ -70,7 +67,7 @@ namespace Infrastructure.Service.Courses
         public async Task<Result<CourseResponseDto>> CreateAsync(CreateCourseDto dto, string instructorId)
         {
             // Validate category exists
-            var category = await _context.Categories.FindAsync(dto.CategoryId);
+            var category = await _unitOfWork.CategoryRepo.getById(dto.CategoryId);
             if (category is null)
                 return Result<CourseResponseDto>.Failure($"Category with ID {dto.CategoryId} does not exist.");
 
@@ -94,12 +91,11 @@ namespace Infrastructure.Service.Courses
                 UpdatedAt        = DateTime.UtcNow
             };
 
-            _context.Courses.Add(course);
-            await _context.SaveChangesAsync();
+            await _unitOfWork.CourseRepo.Create(course);
+            await _unitOfWork.SaveChangesAsync();
 
             // Fetch instructor name for response
-            var instructor = await _context.Users.FindAsync(instructorId);
-            var instructorName = instructor is AppUser appUser ? appUser.FullName : "Unknown";
+            var instructorName = await _userService.GetUserFullNameAsync(instructorId);
 
             return Result<CourseResponseDto>.Success(MapToResponse(course, category.Name, instructorName));
         }
@@ -108,9 +104,7 @@ namespace Infrastructure.Service.Courses
 
         public async Task<Result<CourseResponseDto>> UpdateAsync(int id, UpdateCourseDto dto, string instructorId)
         {
-            var course = await _context.Courses
-                .Include(c => c.Category)
-                .FirstOrDefaultAsync(c => c.Id == id);
+            var course = await _unitOfWork.CourseRepo.getById(id);
 
             if (course is null)
                 return Result<CourseResponseDto>.Failure($"Course with ID {id} was not found.");
@@ -119,7 +113,7 @@ namespace Infrastructure.Service.Courses
                 return Result<CourseResponseDto>.Failure("You are not authorized to edit this course.");
 
             // Validate category exists
-            var category = await _context.Categories.FindAsync(dto.CategoryId);
+            var category = await _unitOfWork.CategoryRepo.getById(dto.CategoryId);
             if (category is null)
                 return Result<CourseResponseDto>.Failure($"Category with ID {dto.CategoryId} does not exist.");
 
@@ -134,13 +128,17 @@ namespace Infrastructure.Service.Courses
             course.Level            = dto.Level;
             course.Language         = dto.Language.Trim();
             course.ThumbnailUrl     = thumbnailUrl;
+
+            // Reset status to Draft and revoke approval if course is modified
+            course.Status           = CourseStatus.Draft;
+            course.IsApproved       = false;
+            
             course.UpdatedAt        = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
 
             // Fetch instructor name for response
-            var instructor = await _context.Users.FindAsync(instructorId);
-            var instructorName = instructor is AppUser appUser ? appUser.FullName : "Unknown";
+            var instructorName = await _userService.GetUserFullNameAsync(instructorId);
 
             return Result<CourseResponseDto>.Success(MapToResponse(course, category.Name, instructorName));
         }
@@ -149,9 +147,7 @@ namespace Infrastructure.Service.Courses
 
         public async Task<Result> DeleteAsync(int id, string instructorId)
         {
-            var course = await _context.Courses
-                .Include(c => c.Enrollments)
-                .FirstOrDefaultAsync(c => c.Id == id);
+            var course = await _unitOfWork.CourseRepo.GetByIdWithDetailsAsync(id);
 
             if (course is null)
                 return Result.Failure($"Course with ID {id} was not found.");
@@ -168,8 +164,8 @@ namespace Infrastructure.Service.Courses
             // Delete thumbnail file from disk if it exists
             DeleteThumbnailFile(course.ThumbnailUrl);
 
-            _context.Courses.Remove(course);
-            await _context.SaveChangesAsync();
+            await _unitOfWork.CourseRepo.Delete(id);
+            await _unitOfWork.SaveChangesAsync();
 
             return Result.Success();
         }
@@ -178,10 +174,7 @@ namespace Infrastructure.Service.Courses
 
         public async Task<Result<CourseResponseDto>> SubmitForReviewAsync(int id, string instructorId)
         {
-            var course = await _context.Courses
-                .Include(c => c.Category)
-                .Include(c => c.Enrollments)
-                .FirstOrDefaultAsync(c => c.Id == id);
+            var course = await _unitOfWork.CourseRepo.GetByIdWithDetailsAsync(id);
 
             if (course is null)
                 return Result<CourseResponseDto>.Failure($"Course with ID {id} was not found.");
@@ -206,10 +199,10 @@ namespace Infrastructure.Service.Courses
             course.IsApproved = false;
             course.UpdatedAt = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync();
+            await _unitOfWork.CourseRepo.Update(course);
+            await _unitOfWork.SaveChangesAsync();
 
-            var instructor = await _context.Users.FindAsync(instructorId);
-            var instructorName = instructor is AppUser appUser ? appUser.FullName : "Unknown";
+            var instructorName = await _userService.GetUserFullNameAsync(instructorId);
 
             return Result<CourseResponseDto>.Success(MapToResponse(course, course.Category?.Name ?? "", instructorName));
         }
@@ -218,30 +211,23 @@ namespace Infrastructure.Service.Courses
 
         public async Task<Result<IEnumerable<CourseSummaryDto>>> GetPublishedAsync(string? search = null, int? categoryId = null)
         {
-            var query = _context.Courses
-                .Include(c => c.Category)
-                .Include(c => c.Enrollments)
-                .Where(c => c.Status == CourseStatus.Published && c.IsApproved)
-                .AsQueryable();
+            var courses = await _unitOfWork.CourseRepo.GetPublishedAsync(search, categoryId);
 
-            if (!string.IsNullOrWhiteSpace(search))
-                query = query.Where(c => c.Title.Contains(search));
+            // Bulk fetch instructor names to avoid multiple DB queries in mapping
+            var instructorIds = courses.Select(c => c.InstructorId).Distinct().ToList();
+            var instructorNames = new Dictionary<string, string>();
+            foreach (var instId in instructorIds)
+            {
+                instructorNames[instId] = await _userService.GetUserFullNameAsync(instId);
+            }
 
-            if (categoryId.HasValue)
-                query = query.Where(c => c.CategoryId == categoryId.Value);
-
-            var courses = await query.OrderByDescending(c => c.CreatedAt).ToListAsync();
-            var dtos    = courses.Select(c => MapToSummary(c, c.Category?.Name ?? "", ""));
+            var dtos = courses.Select(c => MapToSummary(c, c.Category?.Name ?? "", instructorNames.GetValueOrDefault(c.InstructorId, "Unknown")));
 
             return Result<IEnumerable<CourseSummaryDto>>.Success(dtos);
         }
 
         // ── THUMBNAIL HELPERS ─────────────────────────────────────────────────
 
-        /// <summary>
-        /// Saves an uploaded thumbnail to wwwroot/thumbnails/.
-        /// Returns the relative URL path, or the existing URL if no new file is provided.
-        /// </summary>
         private async Task<string> SaveThumbnailAsync(IFormFile? file, string? existingUrl)
         {
             if (file is null || file.Length == 0)
@@ -263,7 +249,6 @@ namespace Infrastructure.Service.Courses
             return $"/thumbnails/{uniqueFileName}";
         }
 
-        /// <summary>Deletes a thumbnail file from disk if it exists.</summary>
         private void DeleteThumbnailFile(string? thumbnailUrl)
         {
             if (string.IsNullOrEmpty(thumbnailUrl)) return;
@@ -275,23 +260,36 @@ namespace Infrastructure.Service.Courses
 
         // ── VALIDATION ────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Returns a validation error message if the course is not ready to publish,
-        /// or null if all required fields are present.
-        /// </summary>
         private static string? ValidateForPublishing(Course course)
         {
             if (string.IsNullOrWhiteSpace(course.Title))
-                return "Course must have a title before publishing.";
+                return "Course must have a title before submitting for review.";
+
+            if (string.IsNullOrWhiteSpace(course.ShortDescription))
+                return "Course must have a short description before submitting for review.";
 
             if (string.IsNullOrWhiteSpace(course.Description))
-                return "Course must have a description before publishing.";
+                return "Course must have a description before submitting for review.";
+
+            if (string.IsNullOrWhiteSpace(course.Language))
+                return "Course must have a language before submitting for review.";
 
             if (course.Price < 0)
                 return "Course price cannot be negative.";
 
             if (course.CategoryId <= 0)
-                return "Course must be assigned to a category before publishing.";
+                return "Course must be assigned to a category before submitting for review.";
+
+            var sections = course.CourseSections?.OrderBy(s => s.DisplayOrder).ToList() ?? [];
+            if (sections.Count == 0)
+                return "Course must have at least one section before submitting for review.";
+
+            foreach (var section in sections)
+            {
+                var lessons = section.Lessons?.ToList() ?? [];
+                if (lessons.Count == 0)
+                    return $"Section '{section.Title}' must contain at least one lesson before submitting for review.";
+            }
 
             return null;
         }

@@ -1,4 +1,4 @@
-﻿using Application.Common;
+using Application.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,5 +13,6 @@ namespace Application.Identity
         Task<Result<string>> CheckLoginCredentialsAsync(string email, string password);
         Task<List<string>> GetUserRolesAsync(string email);
         Task<Result> AssignUserToRole(string appUserId,string roleName);
+        Task<string> GetUserFullNameAsync(string userId);
     }
 }
