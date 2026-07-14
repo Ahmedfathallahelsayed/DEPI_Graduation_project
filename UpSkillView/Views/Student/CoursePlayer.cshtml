@@ -1,0 +1,116 @@
+@model UpSkillView.Models.CoursePlayerViewModel
+@{
+    ViewData["Title"] = Model.CourseTitle;
+}
+
+<div class="container-fluid bg-dark text-white p-3 d-flex justify-content-between align-items-center sticky-top">
+    <div class="d-flex align-items-center">
+        <a asp-action="Dashboard" class="text-white text-decoration-none me-3"><i class="bi bi-arrow-left fs-4"></i></a>
+        <h5 class="mb-0 text-truncate" style="max-width: 300px;">@Model.CourseTitle</h5>
+    </div>
+    <div class="d-none d-md-flex align-items-center">
+        <span class="me-3 small text-white-50">Your Progress</span>
+        <div class="progress" style="width: 150px; height: 8px;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: @(Model.ProgressPercentage)%;" aria-valuenow="@(Model.ProgressPercentage)" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <span class="ms-2 small fw-bold">@(Model.ProgressPercentage)%</span>
+    </div>
+</div>
+
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <!-- Main Content Area -->
+        <div class="col-lg-9 d-flex flex-column" style="min-height: calc(100vh - 64px);">
+            <!-- Video Player Placeholder -->
+            <div class="bg-black flex-grow-1 d-flex align-items-center justify-content-center position-relative">
+                <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Video Placeholder" class="img-fluid opacity-50 w-100 h-100" style="object-fit: cover; position: absolute; top:0; left:0;">
+                <div class="position-relative text-center" style="z-index: 10;">
+                    <button class="btn btn-primary rounded-circle p-3 mb-3 shadow" style="width: 80px; height: 80px;">
+                        <i class="bi bi-play-fill fs-1 ms-1"></i>
+                    </button>
+                    <h3 class="text-white drop-shadow">Select a lesson to begin</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Curriculum -->
+        <div class="col-lg-3 border-start bg-light" style="height: calc(100vh - 64px); overflow-y: auto;">
+            <div class="p-3 bg-white border-bottom sticky-top">
+                <h5 class="mb-0">Course Content</h5>
+            </div>
+            
+            <div class="accordion accordion-flush" id="courseCurriculum">
+                @if (Model.Sections != null && Model.Sections.Any())
+                {
+                    for (int i = 0; i < Model.Sections.Count; i++)
+                    {
+                        var sec = Model.Sections[i];
+                        <div class="accordion-item bg-transparent">
+                            <h2 class="accordion-header" id="heading@(i)">
+                                <button class="accordion-button @(i == 0 ? "" : "collapsed") bg-light fw-bold text-dark border-bottom" type="button" data-bs-toggle="collapse" data-bs-target="#collapse@(i)" aria-expanded="@(i == 0 ? "true" : "false")" aria-controls="collapse@(i)">
+                                    <div class="d-flex flex-column w-100">
+                                        <span>@sec.Title</span>
+                                        <span class="small fw-normal text-muted mt-1">
+                                            @(sec.Lessons?.Count(l => l.IsCompleted) ?? 0) / @(sec.Lessons?.Count ?? 0) | @(sec.Lessons?.Sum(l => l.DurationInMinutes) ?? 0) min
+                                        </span>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapse@(i)" class="accordion-collapse collapse @(i == 0 ? "show" : "")" aria-labelledby="heading@(i)" data-bs-parent="#courseCurriculum">
+                                <div class="accordion-body p-0">
+                                    <ul class="list-group list-group-flush">
+                                        @if (sec.Lessons != null)
+                                        {
+                                            foreach (var lesson in sec.Lessons)
+                                            {
+                                                <li class="list-group-item bg-transparent p-0">
+                                                    <div class="d-flex p-3 card-hover" style="cursor: pointer;">
+                                                        <div class="me-3">
+                                                            @if (lesson.IsCompleted)
+                                                            {
+                                                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                                            }
+                                                            else
+                                                            {
+                                                                <form asp-action="MarkLessonComplete" method="post" style="display:inline;">
+                                                                    <input type="hidden" name="lessonId" value="@lesson.Id" />
+                                                                    <input type="hidden" name="courseId" value="@Model.CourseId" />
+                                                                    <button type="submit" class="btn btn-link p-0 text-muted m-0"><i class="bi bi-circle fs-5"></i></button>
+                                                                </form>
+                                                            }
+                                                        </div>
+                                                        <div>
+                                                            <p class="mb-1 fw-medium text-dark">@lesson.Title</p>
+                                                            <p class="mb-0 small text-muted"><i class="bi bi-play-circle me-1"></i> @lesson.DurationInMinutes min</p>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            }
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="p-4 text-center text-muted">
+                        No sections found.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add a small custom style to override body margin for the full-screen player -->
+@section Scripts {
+    <style>
+        body { padding-top: 0 !important; }
+        .bg-main { background-color: #fff !important; }
+        nav.navbar { display: none !important; }
+        footer { display: none !important; }
+        main { padding: 0 !important; }
+    </style>
+}

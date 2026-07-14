@@ -1,8 +1,122 @@
-﻿@{
+@{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<!-- Hero Section -->
+<section class="hero-section py-5 bg-white-custom border-bottom" style="margin-top:-3rem;">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-5 mb-lg-0">
+                <h1 class="display-4 fw-bold mb-3 text-primary">Master New Skills to Advance Your Career</h1>
+                <p class="lead text-secondary mb-4">Learn from industry experts with our high-quality courses. Join thousands of students already learning on UpSkill LMS.</p>
+                <form asp-controller="Catalog" asp-action="Index" method="get" class="d-flex gap-2">
+                    <input type="text" name="search" class="form-control form-control-lg" placeholder="What do you want to learn?">
+                    <button type="submit" class="btn btn-primary btn-lg px-4"><i class="bi bi-search"></i></button>
+                </form>
+            </div>
+            <div class="col-lg-6 text-center">
+                <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Students Learning" class="img-fluid rounded-4 shadow-lg">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Preview Section -->
+<section class="py-5 bg-main">
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <h2 class="mb-0">Top Categories</h2>
+            <a asp-controller="Catalog" asp-action="Index" class="text-primary fw-medium">View All <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <div class="row g-4">
+            <!-- Category Item -->
+            <div class="col-6 col-md-4 col-lg-3">
+                <a asp-controller="Catalog" asp-action="Index" asp-route-category="web" class="card card-hover text-center py-4 text-decoration-none">
+                    <div class="card-body">
+                        <i class="bi bi-code-slash display-4 text-primary mb-3"></i>
+                        <h5 class="card-title text-dark">Development</h5>
+                        <p class="text-muted small mb-0">1,200+ Courses</p>
+                    </div>
+                </a>
+            </div>
+            <!-- Category Item -->
+            <div class="col-6 col-md-4 col-lg-3">
+                <a asp-controller="Catalog" asp-action="Index" asp-route-category="business" class="card card-hover text-center py-4 text-decoration-none">
+                    <div class="card-body">
+                        <i class="bi bi-briefcase display-4 text-success mb-3"></i>
+                        <h5 class="card-title text-dark">Business</h5>
+                        <p class="text-muted small mb-0">850+ Courses</p>
+                    </div>
+                </a>
+            </div>
+            <!-- Category Item -->
+            <div class="col-6 col-md-4 col-lg-3">
+                <a asp-controller="Catalog" asp-action="Index" asp-route-category="design" class="card card-hover text-center py-4 text-decoration-none">
+                    <div class="card-body">
+                        <i class="bi bi-palette display-4 text-warning mb-3"></i>
+                        <h5 class="card-title text-dark">Design</h5>
+                        <p class="text-muted small mb-0">640+ Courses</p>
+                    </div>
+                </a>
+            </div>
+            <!-- Category Item -->
+            <div class="col-6 col-md-4 col-lg-3">
+                <a asp-controller="Catalog" asp-action="Index" asp-route-category="marketing" class="card card-hover text-center py-4 text-decoration-none">
+                    <div class="card-body">
+                        <i class="bi bi-megaphone display-4 text-danger mb-3"></i>
+                        <h5 class="card-title text-dark">Marketing</h5>
+                        <p class="text-muted small mb-0">430+ Courses</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us -->
+<section class="py-5 bg-white">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <h2>Why Choose UpSkill LMS</h2>
+            <p class="text-muted">We provide the best learning experience to help you achieve your goals.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4 text-center">
+                <div class="mb-3">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-primary-soft rounded-circle" style="width: 80px; height: 80px;">
+                        <i class="bi bi-play-circle-fill display-5 text-primary"></i>
+                    </div>
+                </div>
+                <h5>Learn at your own pace</h5>
+                <p class="text-muted">Enjoy lifetime access to courses on UpSkill's website and app.</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="mb-3">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-success-soft rounded-circle" style="width: 80px; height: 80px;">
+                        <i class="bi bi-patch-check-fill display-5 text-success"></i>
+                    </div>
+                </div>
+                <h5>Expert Instruction</h5>
+                <p class="text-muted">Find the right instructor for you. Choose from many topics and expert teachers.</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="mb-3">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-warning-soft rounded-circle" style="width: 80px; height: 80px;">
+                        <i class="bi bi-award-fill display-5 text-warning"></i>
+                    </div>
+                </div>
+                <h5>Earn a Certificate</h5>
+                <p class="text-muted">Get a certificate of completion for every course you finish to show your skills.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5 bg-primary text-white text-center">
+    <div class="container py-5">
+        <h2 class="text-white mb-3">Become an Instructor</h2>
+        <p class="lead text-white-50 mb-4 mx-auto" style="max-width: 600px;">Instructors from around the world teach millions of students on UpSkill LMS. We provide the tools and skills to teach what you love.</p>
+        <a asp-controller="Account" asp-action="Login" asp-route-tab="register" asp-route-role="Instructor" class="btn btn-light btn-lg fw-bold text-primary">Start Teaching Today</a>
+    </div>
+</section>

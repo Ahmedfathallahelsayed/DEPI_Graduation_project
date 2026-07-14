@@ -1,0 +1,62 @@
+@model List<Application.Courses.DTOs.Course.CourseResponseDto>
+@{
+    ViewData["Title"] = "My Courses";
+    Layout = "_DashboardLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-1">My Courses</h2>
+    <a asp-controller="Instructor" asp-action="CreateCourse" class="btn btn-primary d-none d-sm-inline-block">Create New Course</a>
+</div>
+
+<div class="row g-4">
+    @if (Model != null && Model.Any())
+    {
+        foreach (var course in Model)
+        {
+            <div class="col-md-6 col-xl-4">
+                <div class="card h-100 border-0 shadow-sm card-hover">
+                    <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="Course Image" style="height: 160px; object-fit: cover;">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-primary-soft">@course.CategoryName</span>
+                            @if (course.Status == Domain.Enum.CourseStatus.Published)
+                            {
+                                <span class="badge bg-success">Published</span>
+                            }
+                            else if (course.Status == Domain.Enum.CourseStatus.Archived)
+                            {
+                                <span class="badge bg-secondary">Archived</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">Draft/Pending</span>
+                            }
+                        </div>
+                        <h5 class="card-title text-truncate">
+                            <a href="#" class="text-dark text-decoration-none">@course.Title</a>
+                        </h5>
+                        <p class="text-muted small mb-3">Price: $@course.Price.ToString("0.00")</p>
+                        
+                    </div>
+                    <div class="card-footer bg-white border-top-0 pt-0 pb-3 d-flex gap-2">
+                        @if (course.Status == Domain.Enum.CourseStatus.Draft)
+                        {
+                            <form asp-action="SubmitForReview" method="post" class="w-100">
+                                <input type="hidden" name="id" value="@course.Id" />
+                                <button type="submit" class="btn btn-outline-success w-100 btn-sm">Submit for Review</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12 text-center py-5">
+            <h5 class="text-muted">You have not created any courses yet.</h5>
+            <a asp-controller="Instructor" asp-action="CreateCourse" class="btn btn-primary mt-3">Create Course</a>
+        </div>
+    }
+</div>

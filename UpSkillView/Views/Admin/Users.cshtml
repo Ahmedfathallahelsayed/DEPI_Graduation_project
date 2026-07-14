@@ -1,0 +1,127 @@
+﻿@{
+    ViewData["Title"] = "Manage Users";
+    Layout = "_DashboardLayout";
+}
+
+<div class="dashboard-main flex-grow-1 p-4 w-100">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">User Management</h2>
+                    <p class="text-muted mb-0">View and manage all registered accounts on the platform.</p>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom pt-4 pb-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    <ul class="nav nav-pills" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active bg-light text-dark fw-medium border px-3 py-1 me-2" type="button">All Users (1,240)</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link bg-transparent text-muted fw-medium px-3 py-1 me-2" type="button">Students</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link bg-transparent text-muted fw-medium px-3 py-1" type="button">Instructors</button>
+                        </li>
+                    </ul>
+                    
+                    <div class="input-group" style="max-width: 300px;">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" class="form-control border-start-0 ps-0" placeholder="Search by name or email...">
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-custom mb-0 table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">User</th>
+                                    <th>Role</th>
+                                    <th>Joined Date</th>
+                                    <th>Status</th>
+                                    <th class="text-end pe-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="ps-4 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://ui-avatars.com/api/?name=John+Doe" alt="User" width="40" class="rounded-circle me-3">
+                                            <div>
+                                                <h6 class="mb-0">John Doe</h6>
+                                                <small class="text-muted">john.doe@example.com</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3"><span class="badge bg-light text-dark border">Student</span></td>
+                                    <td class="py-3 text-secondary">Oct 12, 2023</td>
+                                    <td class="py-3"><span class="badge bg-success-soft">Active</span></td>
+                                    <td class="text-end pe-4 py-3">
+                                        <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
+                                        <button class="btn btn-sm btn-outline-danger">Block</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="ps-4 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://ui-avatars.com/api/?name=Angela+Yu" alt="User" width="40" class="rounded-circle me-3">
+                                            <div>
+                                                <h6 class="mb-0">Dr. Angela Yu</h6>
+                                                <small class="text-muted">angela@example.com</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3"><span class="badge bg-primary-soft text-primary border">Instructor</span></td>
+                                    <td class="py-3 text-secondary">Jan 05, 2022</td>
+                                    <td class="py-3"><span class="badge bg-success-soft">Active</span></td>
+                                    <td class="text-end pe-4 py-3">
+                                        <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
+                                        <button class="btn btn-sm btn-outline-danger">Block</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="ps-4 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://ui-avatars.com/api/?name=Mark+Smith" alt="User" width="40" class="rounded-circle me-3">
+                                            <div>
+                                                <h6 class="mb-0">Mark Smith</h6>
+                                                <small class="text-muted">mark@example.com</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3"><span class="badge bg-light text-dark border">Student</span></td>
+                                    <td class="py-3 text-secondary">Nov 22, 2023</td>
+                                    <td class="py-3"><span class="badge bg-danger-soft text-danger">Blocked</span></td>
+                                    <td class="text-end pe-4 py-3">
+                                        <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
+                                        <button class="btn btn-sm btn-outline-success">Unblock</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="ps-4 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins" alt="User" width="40" class="rounded-circle me-3">
+                                            <div>
+                                                <h6 class="mb-0">Sarah Jenkins</h6>
+                                                <small class="text-muted">sarah.j@example.com</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3"><span class="badge bg-primary-soft text-primary border">Instructor</span></td>
+                                    <td class="py-3 text-secondary">Mar 15, 2023</td>
+                                    <td class="py-3"><span class="badge bg-success-soft">Active</span></td>
+                                    <td class="text-end pe-4 py-3">
+                                        <button class="btn btn-sm btn-outline-secondary me-1">Edit</button>
+                                        <button class="btn btn-sm btn-outline-danger">Block</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </di
+
+

@@ -8,7 +8,7 @@ namespace UpSkillAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    // [Authorize(Roles = "Instructor")] // Commended out for easy testing if auth isn't fully ready
+    [Authorize(Roles = "Instructor")]
     public class CourseContentController : ControllerBase
     {
         private readonly ICourseContentService _courseContentService;

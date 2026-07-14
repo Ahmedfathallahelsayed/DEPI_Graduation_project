@@ -152,7 +152,7 @@ namespace UpSkill.Controllers
         /// Does not publish — Admin publishes via POST /api/Admin/courses/{id}/publish.
         /// </summary>
         [HttpPost("{id:int}/submit-for-review")]
-        [Authorize(Roles = "Instructor")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Instructor")]
         public async Task<IActionResult> SubmitForReview(int id)
         {
             var instructorId = GetCurrentUserId();

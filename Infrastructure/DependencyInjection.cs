@@ -85,7 +85,7 @@ namespace Infrastructure
 
             // Add DbContext Connection
             services.AddDbContext<AppDBContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("MostafaCon")));
+            options.UseSqlServer(configuration.GetConnectionString("ConnectDBS")));
 
             // Registering Repos contracts
             services.AddScoped<ICategory, CategoryRepo>();
@@ -105,8 +105,6 @@ namespace Infrastructure
                     .AddEntityFrameworkStores<AppDBContext>()
                     .AddDefaultTokenProviders();
 
-            // Register File Saving
-            services.AddScoped<IFileService, FileService>();
 
             // Registering Services in DI
             services.AddScoped<ITokenService, TokenService>();

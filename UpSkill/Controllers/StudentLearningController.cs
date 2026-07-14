@@ -1,4 +1,5 @@
 using Application.CourseContent.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -18,7 +19,7 @@ namespace UpSkillAPI.Controllers
         }
 
         [HttpGet("course/{courseId}/hierarchy")]
-        [Authorize]
+        [AllowAnonymous]
         public async Task<IActionResult> GetCourseHierarchy(int courseId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
@@ -28,7 +29,7 @@ namespace UpSkillAPI.Controllers
         }
 
         [HttpPost("lessons/{lessonId}/complete")]
-        [Authorize(Roles = "Student")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Student")]
         public async Task<IActionResult> MarkLessonComplete(int lessonId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
@@ -62,7 +63,7 @@ namespace UpSkillAPI.Controllers
         }
 
         [HttpPost("courses/{courseId}/enroll")]
-        [Authorize(Roles = "Student")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Student")]
         public async Task<IActionResult> EnrollStudent(int courseId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
@@ -75,7 +76,7 @@ namespace UpSkillAPI.Controllers
         }
 
         [HttpGet("my-courses")]
-        [Authorize(Roles = "Student")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Student")]
         public async Task<IActionResult> GetMyCourses()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
