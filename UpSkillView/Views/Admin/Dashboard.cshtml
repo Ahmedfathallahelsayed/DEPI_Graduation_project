@@ -13,6 +13,7 @@
 
 <!-- Stats Row -->
 <div class="row g-4 mb-4">
+    <!-- Total Users -->
     <div class="col-sm-6 col-xl-3">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
@@ -22,11 +23,27 @@
                         <i class="bi bi-people"></i>
                     </div>
                 </div>
-                <h3 class="fw-bold mb-0">@(Model.TotalStudents + Model.TotalInstructors)</h3>
+                <h3 class="fw-bold mb-0">@Model.TotalUsers</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Students -->
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h6 class="text-muted mb-0">Students</h6>
+                    <div class="p-2 bg-success-soft rounded text-success">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-0">@Model.TotalStudents</h3>
             </div>
         </div>
     </div>
     
+    <!-- Total Instructors -->
     <div class="col-sm-6 col-xl-3">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
@@ -41,12 +58,30 @@
         </div>
     </div>
 
+    <!-- Total Admins -->
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h6 class="text-muted mb-0">Administrators</h6>
+                    <div class="p-2 bg-danger-soft rounded text-danger">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-0">@Model.TotalAdmins</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Total Courses -->
     <div class="col-sm-6 col-xl-3">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between mb-2">
                     <h6 class="text-muted mb-0">Total Courses</h6>
-                    <div class="p-2 bg-success-soft rounded text-success">
+                    <div class="p-2 bg-primary-soft rounded text-primary">
                         <i class="bi bi-journal-check"></i>
                     </div>
                 </div>
@@ -55,16 +90,47 @@
         </div>
     </div>
 
+    <!-- Pending Courses -->
     <div class="col-sm-6 col-xl-3">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between mb-2">
-                    <h6 class="text-muted mb-0">Pending Courses</h6>
+                    <h6 class="text-muted mb-0">Pending Approval</h6>
                     <div class="p-2 bg-warning-soft rounded text-warning">
                         <i class="bi bi-hourglass-split"></i>
                     </div>
                 </div>
                 <h3 class="fw-bold mb-0">@Model.PendingCoursesCount</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Published Courses -->
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h6 class="text-muted mb-0">Published Courses</h6>
+                    <div class="p-2 bg-success-soft rounded text-success">
+                        <i class="bi bi-journal-bookmark-fill"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-0">@Model.PublishedCoursesCount</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Revenue -->
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h6 class="text-muted mb-0">Total Revenue</h6>
+                    <div class="p-2 bg-info-soft rounded text-info">
+                        <i class="bi bi-currency-dollar"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-0">$@Model.TotalRevenue.ToString("N2")</h3>
             </div>
         </div>
     </div>

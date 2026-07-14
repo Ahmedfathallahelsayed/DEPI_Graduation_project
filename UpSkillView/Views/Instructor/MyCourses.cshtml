@@ -28,9 +28,13 @@
                             {
                                 <span class="badge bg-secondary">Archived</span>
                             }
+                            else if (course.Status == Domain.Enum.CourseStatus.SubmittedForApproval)
+                            {
+                                <span class="badge bg-warning text-dark">Pending Review</span>
+                            }
                             else
                             {
-                                <span class="badge bg-warning text-dark">Draft/Pending</span>
+                                <span class="badge bg-info text-dark">Draft</span>
                             }
                         </div>
                         <h5 class="card-title text-truncate">

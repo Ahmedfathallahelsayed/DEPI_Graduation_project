@@ -1,9 +1,11 @@
-﻿using Application.Admin.DTOs;
+using Application.Admin.DTOs;
 using Application.Admin.Interfaces;
 using Application.Common;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace UpSkill.Controllers
 {
@@ -43,7 +45,7 @@ namespace UpSkill.Controllers
             return ToActionResult(result);
         }
 
-        /// <summary>Approve a submitted course (does not publish).</summary>
+        /// <summary>Approve a submitted course (directly publishes it).</summary>
         [HttpPost("courses/{id:int}/approve")]
         public async Task<IActionResult> ApproveCourse(int id)
         {
@@ -51,7 +53,7 @@ namespace UpSkill.Controllers
             return ToActionResult(result);
         }
 
-        /// <summary>Reject a submitted course with a required reason → Draft.</summary>
+        /// <summary>Reject a submitted course with a required reason.</summary>
         [HttpPost("courses/{id:int}/reject")]
         public async Task<IActionResult> RejectCourse(int id, [FromBody] RejectCourseDto dto)
         {
@@ -59,14 +61,6 @@ namespace UpSkill.Controllers
                 return BadRequest(ModelState);
 
             var result = await _adminService.RejectCourseAsync(id, dto);
-            return ToActionResult(result);
-        }
-
-        /// <summary>Publish an approved, complete course. Only Admin can publish.</summary>
-        [HttpPost("courses/{id:int}/publish")]
-        public async Task<IActionResult> PublishCourse(int id)
-        {
-            var result = await _adminService.PublishCourseAsync(id);
             return ToActionResult(result);
         }
 
@@ -78,13 +72,48 @@ namespace UpSkill.Controllers
             return ToActionResult(result);
         }
 
+        // ── User Management Endpoints ───────────────────────────────────
+
+        /// <summary>Get list of all users in the system.</summary>
+        [HttpGet("users")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var result = await _adminService.GetAllUsersAsync();
+            return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+        }
+
+        /// <summary>Block a user account.</summary>
+        [HttpPost("users/{id}/block")]
+        public async Task<IActionResult> BlockUser(string id)
+        {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var result = await _adminService.BlockUserAsync(id, currentUserId);
+            return result.IsSuccess ? Ok(result) : BadRequest(result.Error);
+        }
+
+        /// <summary>Unblock a user account.</summary>
+        [HttpPost("users/{id}/unblock")]
+        public async Task<IActionResult> UnblockUser(string id)
+        {
+            var result = await _adminService.UnblockUserAsync(id);
+            return result.IsSuccess ? Ok(result) : BadRequest(result.Error);
+        }
+
+        /// <summary>Edit user details (Full Name and Phone Number only).</summary>
+        [HttpPut("users/{id}")]
+        public async Task<IActionResult> EditUser(string id, [FromBody] EditUserDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _adminService.EditUserAsync(id, dto);
+            return result.IsSuccess ? Ok(result) : BadRequest(result.Error);
+        }
+
         private IActionResult ToActionResult<T>(Result<T> result)
         {
             if (result.IsSuccess)
                 return Ok(result.Value);
-
-            if (result.Error.Contains("not found", StringComparison.OrdinalIgnoreCase))
-                return NotFound(result.Error);
 
             return BadRequest(result.Error);
         }

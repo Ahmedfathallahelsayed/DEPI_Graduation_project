@@ -1,4 +1,4 @@
-﻿using Application.Admin.DTOs;
+using Application.Admin.DTOs;
 using Application.Admin.Interfaces;
 using Application.Common;
 using Application.Courses.DTOs.Course;
@@ -6,29 +6,39 @@ using Domain.Entity;
 using Domain.Enum;
 using Infrastructure.Persistance;
 using Infrastructure.Persistance.DbContext;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Infrastructure.Service.Admin
 {
     public class AdminService : IAdminService
     {
         private readonly AppDBContext _context;
+        private readonly UserManager<AppUser> _userManager;
 
-        public AdminService(AppDBContext context)
+        public AdminService(AppDBContext context, UserManager<AppUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         public async Task<Result<DashboardStatsDto>> GetDashboardStatsAsync()
         {
+            var totalUsers = await _context.Users.CountAsync();
+
             var roleIds = await _context.Roles
                 .AsNoTracking()
-                .Where(r => r.Name == "Student" || r.Name == "Instructor")
+                .Where(r => r.Name == "Student" || r.Name == "Instructor" || r.Name == "Admin")
                 .Select(r => new { r.Name, r.Id })
                 .ToListAsync();
 
             var studentRoleId = roleIds.FirstOrDefault(r => r.Name == "Student")?.Id;
             var instructorRoleId = roleIds.FirstOrDefault(r => r.Name == "Instructor")?.Id;
+            var adminRoleId = roleIds.FirstOrDefault(r => r.Name == "Admin")?.Id;
 
             var totalStudents = studentRoleId is null
                 ? 0
@@ -38,9 +48,17 @@ namespace Infrastructure.Service.Admin
                 ? 0
                 : await _context.UserRoles.CountAsync(ur => ur.RoleId == instructorRoleId);
 
+            var totalAdmins = adminRoleId is null
+                ? 0
+                : await _context.UserRoles.CountAsync(ur => ur.RoleId == adminRoleId);
+
             var totalCourses = await _context.Courses.CountAsync();
+            
             var pendingCoursesCount = await _context.Courses
                 .CountAsync(c => c.Status == CourseStatus.SubmittedForApproval && !c.IsApproved);
+
+            var publishedCoursesCount = await _context.Courses
+                .CountAsync(c => c.Status == CourseStatus.Published);
 
             var totalRevenue = await _context.Orders
                 .AsNoTracking()
@@ -49,10 +67,13 @@ namespace Infrastructure.Service.Admin
 
             return Result<DashboardStatsDto>.Success(new DashboardStatsDto
             {
+                TotalUsers = totalUsers,
                 TotalStudents = totalStudents,
                 TotalInstructors = totalInstructors,
+                TotalAdmins = totalAdmins,
                 TotalCourses = totalCourses,
                 PendingCoursesCount = pendingCoursesCount,
+                PublishedCoursesCount = publishedCoursesCount,
                 TotalRevenue = totalRevenue
             });
         }
@@ -103,10 +124,12 @@ namespace Infrastructure.Service.Admin
             if (course.Status != CourseStatus.SubmittedForApproval)
                 return Result<CourseResponseDto>.Failure("Only courses submitted for approval can be approved.");
 
-            if (course.IsApproved)
-                return Result<CourseResponseDto>.Failure("Course is already approved. Use the publish endpoint to make it live.");
+            var validationError = ValidateForPublish(course);
+            if (validationError is not null)
+                return Result<CourseResponseDto>.Failure(validationError);
 
             course.IsApproved = true;
+            course.Status = CourseStatus.Published; // Directly publish on approval
             course.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -132,29 +155,8 @@ namespace Infrastructure.Service.Admin
             if (course.Status != CourseStatus.SubmittedForApproval)
                 return Result<CourseResponseDto>.Failure("Only courses submitted for approval can be rejected.");
 
-            // Course entity has no RejectionReason column; reason is validated for the API contract only.
             course.IsApproved = false;
             course.Status = CourseStatus.Draft;
-            course.UpdatedAt = DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-            return Result<CourseResponseDto>.Success(await MapToResponseAsync(course));
-        }
-
-        public async Task<Result<CourseResponseDto>> PublishCourseAsync(int courseId)
-        {
-            var course = await LoadCourseWithContentAsync(courseId, track: true);
-            if (course is null)
-                return Result<CourseResponseDto>.Failure($"Course with ID {courseId} was not found.");
-
-            if (course.Status == CourseStatus.Published && course.IsApproved)
-                return Result<CourseResponseDto>.Failure("Course is already published.");
-
-            var validationError = ValidateForPublish(course);
-            if (validationError is not null)
-                return Result<CourseResponseDto>.Failure(validationError);
-
-            course.Status = CourseStatus.Published;
             course.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -177,6 +179,127 @@ namespace Infrastructure.Service.Admin
             return Result<CourseResponseDto>.Success(await MapToResponseAsync(course));
         }
 
+        // ── User Management Implementation ──────────────────────────────
+        public async Task<Result<IEnumerable<UserDto>>> GetAllUsersAsync()
+        {
+            var users = await _context.Users
+                .AsNoTracking()
+                .OrderByDescending(u => u.CreatedAt)
+                .ToListAsync();
+
+            var userRoles = await _context.UserRoles
+                .AsNoTracking()
+                .ToListAsync();
+
+            var roles = await _context.Roles
+                .AsNoTracking()
+                .ToDictionaryAsync(r => r.Id, r => r.Name);
+
+            var userRolesGrouped = userRoles
+                .GroupBy(ur => ur.UserId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(ur => roles.GetValueOrDefault(ur.RoleId) ?? "Unknown").FirstOrDefault() ?? "None"
+                );
+
+            var dtos = users.Select(u => new UserDto
+            {
+                Id = u.Id,
+                FullName = u.FullName ?? string.Empty,
+                Email = u.Email ?? string.Empty,
+                Role = userRolesGrouped.GetValueOrDefault(u.Id) ?? "None",
+                CreatedAt = u.CreatedAt,
+                IsActive = u.IsActive,
+                PhoneNumber = u.PhoneNumber ?? string.Empty
+            });
+
+            return Result<IEnumerable<UserDto>>.Success(dtos);
+        }
+
+        public async Task<Result> BlockUserAsync(string userId, string currentUserId)
+        {
+            if (userId == currentUserId)
+            {
+                return Result.Failure("You cannot block your own admin account.");
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return Result.Failure("User not found.");
+            }
+
+            var isUserAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+            if (isUserAdmin)
+            {
+                var adminRoleId = (await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Admin"))?.Id;
+                if (adminRoleId != null)
+                {
+                    var activeAdminsCount = await (from ur in _context.UserRoles
+                                                   join u in _context.Users on ur.UserId equals u.Id
+                                                   where ur.RoleId == adminRoleId && u.IsActive
+                                                   select u).CountAsync();
+
+                    if (activeAdminsCount <= 1 && user.IsActive)
+                    {
+                        return Result.Failure("You cannot block the last active administrator.");
+                    }
+                }
+            }
+
+            user.IsActive = false;
+            user.UpdatedAt = DateTime.UtcNow;
+            var updateResult = await _userManager.UpdateAsync(user);
+
+            if (!updateResult.Succeeded)
+            {
+                return Result.Failure(string.Join("; ", updateResult.Errors.Select(e => e.Description)));
+            }
+
+            return Result.Success();
+        }
+
+        public async Task<Result> UnblockUserAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return Result.Failure("User not found.");
+            }
+
+            user.IsActive = true;
+            user.UpdatedAt = DateTime.UtcNow;
+            var updateResult = await _userManager.UpdateAsync(user);
+
+            if (!updateResult.Succeeded)
+            {
+                return Result.Failure(string.Join("; ", updateResult.Errors.Select(e => e.Description)));
+            }
+
+            return Result.Success();
+        }
+
+        public async Task<Result> EditUserAsync(string userId, EditUserDto dto)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return Result.Failure("User not found.");
+            }
+
+            user.FullName = dto.FullName;
+            user.PhoneNumber = dto.PhoneNumber;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                return Result.Failure(string.Join("; ", updateResult.Errors.Select(e => e.Description)));
+            }
+
+            return Result.Success();
+        }
+
         private async Task<Course?> LoadCourseWithContentAsync(int courseId, bool track)
         {
             IQueryable<Course> query = _context.Courses
@@ -193,9 +316,6 @@ namespace Infrastructure.Service.Admin
 
         private static string? ValidateForPublish(Course course)
         {
-            if (!course.IsApproved)
-                return "Only approved courses can be published. Approve the course first.";
-
             if (string.IsNullOrWhiteSpace(course.Title))
                 return "Course must have a title before publishing.";
 

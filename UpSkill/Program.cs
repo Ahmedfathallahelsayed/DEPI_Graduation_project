@@ -88,6 +88,21 @@ namespace UpSkill
 
             app.MapControllers();
 
+            // Seed database at startup
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    AppDbContextSeed.SeedAsync(services).Wait();
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "An error occurred seeding the DB.");
+                }
+            }
+
             app.Run();
         }
     }

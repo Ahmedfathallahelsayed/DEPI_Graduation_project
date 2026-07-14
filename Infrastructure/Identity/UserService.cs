@@ -50,6 +50,10 @@ namespace Infrastructure.Services.Identity
             {
                 return Result<string>.Failure("Invalid email or password.");
             }
+            if (!user.IsActive)
+            {
+                return Result<string>.Failure("Your account has been blocked by an administrator.");
+            }
             var Result = await UserManager.CheckPasswordAsync(user, password);
             if (!Result)
             {

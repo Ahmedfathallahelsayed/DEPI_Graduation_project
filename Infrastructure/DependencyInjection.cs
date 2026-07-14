@@ -29,6 +29,14 @@ namespace Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
+            // Add DbContext Connection
+            services.AddDbContext<AppDBContext>(options =>
+                options.UseSqlServer(configuration.GetConnectionString("ConnectDBS")));
+
+            // Adding Identity (must come before AddAuthentication to allow JWT to override default cookie schemes)
+            services.AddIdentity<AppUser, IdentityRole>()
+                    .AddEntityFrameworkStores<AppDBContext>()
+                    .AddDefaultTokenProviders();
 
             // Add JWT Authentication
             var jwtSettings = configuration.GetSection("Jwt");
@@ -37,6 +45,7 @@ namespace Infrastructure
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             })
             .AddJwtBearer(options =>
             {
@@ -78,15 +87,6 @@ namespace Infrastructure
                     }
                 };
             });
-
-            // Add DbContext Connection
-            services.AddDbContext<AppDBContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("ConnectDBS")));
-
-            // Adding Identity
-            services.AddIdentity<AppUser, IdentityRole>()
-                    .AddEntityFrameworkStores<AppDBContext>()
-                    .AddDefaultTokenProviders();
 
 
             // Registering Services in DI

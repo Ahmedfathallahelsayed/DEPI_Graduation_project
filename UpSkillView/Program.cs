@@ -20,6 +20,10 @@ namespace UpSkillView
                 client.BaseAddress = new Uri(
                     builder.Configuration["ApiSettings:BaseUrl"]
                     ?? "https://localhost:7209");
+            })
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
             });
 
             builder.Services.AddSession(options =>
