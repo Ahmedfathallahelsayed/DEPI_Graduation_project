@@ -1,0 +1,55 @@
+<div class="sidebar d-none d-lg-block" id="sidebar" style="width: 250px; flex-shrink: 0;">
+    <div class="d-flex flex-column h-100">
+        <ul class="nav nav-pills flex-column mb-auto">
+            @if(User.IsInRole("Student"))
+            {
+                <li class="nav-item">
+                    <a asp-controller="Student" asp-action="Dashboard" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "active" : "")">
+                        <i class="bi bi-grid nav-icon"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a asp-controller="Student" asp-action="MyCourses" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "MyCourses" ? "active" : "")">
+                        <i class="bi bi-play-btn nav-icon"></i> My Courses
+                    </a>
+                </li>
+            }
+            else if(User.IsInRole("Instructor"))
+            {
+                <li class="nav-item">
+                    <a asp-controller="Instructor" asp-action="Dashboard" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "active" : "")">
+                        <i class="bi bi-grid nav-icon"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a asp-controller="Instructor" asp-action="MyCourses" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "MyCourses" ? "active" : "")">
+                        <i class="bi bi-journal-code nav-icon"></i> My Courses
+                    </a>
+                </li>
+            }
+            else if(User.IsInRole("Admin"))
+            {
+                <li class="nav-item">
+                    <a asp-controller="Admin" asp-action="Dashboard" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "active" : "")">
+                        <i class="bi bi-grid nav-icon"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a asp-controller="Admin" asp-action="Users" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Users" ? "active" : "")">
+                        <i class="bi bi-people nav-icon"></i> Users
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a asp-controller="Admin" asp-action="Courses" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Courses" ? "active" : "")">
+                        <i class="bi bi-journal-check nav-icon"></i> Courses
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a asp-controller="Admin" asp-action="Categories" class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Categories" ? "active" : "")">
+                        <i class="bi bi-tags nav-icon"></i> Categories
+                    </a>
+                </li>
+            }
+        </ul>
+    </div>
+</div>

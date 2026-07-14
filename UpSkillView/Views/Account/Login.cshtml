@@ -1,0 +1,124 @@
+@model UpSkillView.Models.Auth.LoginViewModel
+@{
+    ViewData["Title"] = "Authentication";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6 col-xl-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 p-md-5">
+                    
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            <div asp-validation-summary="All" class="text-danger"></div>
+                        </div>
+                    }
+
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <!-- Auth Tabs -->
+                    <ul class="nav nav-pills nav-justified mb-4" id="authTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link @(ViewData["ActiveTab"]?.ToString() == "login" || ViewData["ActiveTab"] == null ? "active" : "") rounded-pill fw-medium" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab" aria-controls="login" aria-selected="true">Log In</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link @(ViewData["ActiveTab"]?.ToString() == "register" ? "active" : "") rounded-pill fw-medium" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button" role="tab" aria-controls="register" aria-selected="false">Sign Up</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="authTabsContent">
+                        <!-- Login Form -->
+                        <div class="tab-pane fade @(ViewData["ActiveTab"]?.ToString() == "login" || ViewData["ActiveTab"] == null ? "show active" : "")" id="login" role="tabpanel" aria-labelledby="login-tab">
+                            <h4 class="fw-bold mb-4 text-center">Welcome Back</h4>
+                            
+                            <form asp-action="Login" method="post">
+                                <div class="mb-3">
+                                    <label asp-for="Email" class="form-label">Email address</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light text-muted"><i class="bi bi-envelope"></i></span>
+                                        <input asp-for="Email" class="form-control" placeholder="name@example.com" required>
+                                    </div>
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+                                <div class="mb-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label asp-for="Password" class="form-label mb-0">Password</label>
+                                    </div>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light text-muted"><i class="bi bi-lock"></i></span>
+                                        <input asp-for="Password" class="form-control" placeholder="Enter password" required type="password">
+                                    </div>
+                                    <span asp-validation-for="Password" class="text-danger"></span>
+                                </div>
+                                <div class="mb-4 form-check">
+                                    <input asp-for="RememberMe" class="form-check-input">
+                                    <label class="form-check-label text-muted" asp-for="RememberMe">Remember me</label>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100 py-2 fw-medium mb-3">Log In</button>
+                            </form>
+                        </div>
+
+                        <!-- Register Form -->
+                        <div class="tab-pane fade @(ViewData["ActiveTab"]?.ToString() == "register" ? "show active" : "")" id="register" role="tabpanel" aria-labelledby="register-tab">
+                            <h4 class="fw-bold mb-4 text-center">Create an Account</h4>
+                            
+                            <form asp-action="Register" method="post">
+                                <!-- Role Selection -->
+                                <div class="mb-4">
+                                    <label class="form-label d-block text-center mb-3">I want to:</label>
+                                    <div class="d-flex justify-content-center gap-3">
+                                        <input type="radio" class="btn-check" name="RoleOptions" id="roleStudent" value="Student" autocomplete="off" @(ViewData["Role"]?.ToString() != "Instructor" ? "checked" : "")>
+                                        <label class="btn btn-outline-primary px-4 rounded-pill" for="roleStudent">Learn</label>
+
+                                        <input type="radio" class="btn-check" name="RoleOptions" id="roleInstructor" value="Instructor" autocomplete="off" @(ViewData["Role"]?.ToString() == "Instructor" ? "checked" : "")>
+                                        <label class="btn btn-outline-primary px-4 rounded-pill" for="roleInstructor">Teach</label>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">First Name</label>
+                                        <input type="text" name="FirstName" class="form-control" placeholder="John" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Last Name</label>
+                                        <input type="text" name="LastName" class="form-control" placeholder="Doe" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="text" name="PhoneNumber" class="form-control" placeholder="+123456789">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Email address</label>
+                                    <input type="email" name="RegisterEmail" class="form-control" placeholder="name@example.com" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Password</label>
+                                    <input type="password" name="RegisterPassword" class="form-control" placeholder="Create a password" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label">Confirm Password</label>
+                                    <input type="password" name="ConfirmPassword" class="form-control" placeholder="Confirm your password" required>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary w-100 py-2 fw-medium">Sign Up</button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

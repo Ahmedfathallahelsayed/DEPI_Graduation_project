@@ -1,0 +1,180 @@
+@model UpSkillView.Models.Instructor.CreateCourseViewModel
+@{
+    ViewData["Title"] = "Create Course";
+    Layout = "_DashboardLayout";
+}
+
+<div class="dashboard-main flex-grow-1 p-4 w-100">
+    <form asp-action="CreateCourse" method="post" enctype="multipart/form-data">
+            
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="instructor-dashboard.html" class="text-decoration-none">My Courses</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Create New Course</li>
+                </ol>
+            </nav>
+
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-3">
+                <div>
+                    <h2 class="mb-1">Create New Course</h2>
+                    <p class="text-muted mb-0">Fill in the details to publish your course.</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Save Course</button>
+                </div>
+            </div>
+            
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                </div>
+            }
+
+            <!-- Course Creation Wizard Tabs -->
+            <ul class="nav nav-pills mb-4 bg-white p-2 rounded shadow-sm border" id="courseCreationTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="basic-tab" data-bs-toggle="pill" data-bs-target="#basic" type="button" role="tab" aria-controls="basic" aria-selected="true">
+                        1. Basic Info
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="details-tab" data-bs-toggle="pill" data-bs-target="#details" type="button" role="tab" aria-controls="details" aria-selected="false">
+                        2. Details & Media
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="curriculum-tab" data-bs-toggle="pill" data-bs-target="#curriculum" type="button" role="tab" aria-controls="curriculum" aria-selected="false">
+                        3. Curriculum
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="courseCreationTabsContent">
+                
+                <!-- Step 1: Basic Info -->
+                <div class="tab-pane fade show active" id="basic" role="tabpanel" aria-labelledby="basic-tab">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <h5 class="mb-4">Course Landing Page</h5>
+                            
+                            <div class="mb-4">
+                                <label for="courseTitle" class="form-label">Course Title</label>
+                                <input type="text" name="CourseTitle" class="form-control" id="courseTitle" placeholder="e.g. Learn Python from Scratch" required>
+                                <div class="form-text">A catchy title helps students find your course.</div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="courseSubtitle" class="form-label">Course Subtitle</label>
+                                <input type="text" name="CourseSubtitle" class="form-control" id="courseSubtitle" placeholder="e.g. Master Python 3 and build 10 real-world applications">
+                                <div class="form-text">A brief summary of what students will learn.</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="courseDescription" class="form-label">Course Description</label>
+                                <textarea name="CourseDescription" class="form-control" id="courseDescription" rows="6" placeholder="Provide a detailed description of your course..." required></textarea>
+                            </div>
+
+                            <div class="text-end mt-4">
+                                <button class="btn btn-primary" onclick="document.getElementById('details-tab').click()">Next: Details & Media <i class="bi bi-arrow-right ms-1"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Details & Media -->
+                <div class="tab-pane fade" id="details" role="tabpanel" aria-labelledby="details-tab">
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-4">
+                            <h5 class="mb-4">Category & Pricing</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label for="courseCategory" class="form-label">Category</label>
+                                    <select name="CategoryId" class="form-select" id="courseCategory" required>
+                                        <option selected>Select a category</option>
+                                        <option value="1">Development</option>
+                                        <option value="2">Business</option>
+                                        <option value="3">Design</option>
+                                        <option value="4">Marketing</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label for="courseLevel" class="form-label">Level</label>
+                                    <select name="Level" class="form-select" id="courseLevel" required>
+                                        <option selected>Select level</option>
+                                        <option value="3">All Levels</option>
+                                        <option value="0">Beginner</option>
+                                        <option value="1">Intermediate</option>
+                                        <option value="2">Advanced</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                                <div class="col-md-6 mb-4">
+                                    <label for="coursePrice" class="form-label">Price (USD)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" name="Price" class="form-control" id="coursePrice" placeholder="0.00" required>
+                                    </div>
+                                    <div class="form-text">Set to 0 to make the course free.</div>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label for="courseLanguage" class="form-label">Language</label>
+                                    <select name="Language" class="form-select" id="courseLanguage" required>
+                                        <option value="English" selected>English</option>
+                                        <option value="Arabic">Arabic</option>
+                                        <option value="Spanish">Spanish</option>
+                                        <option value="French">French</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <h5 class="mb-4">Course Media</h5>
+                            
+                            <div class="mb-4">
+                                <label class="form-label">Course Image</label>
+                                <div class="row align-items-center">
+                                    <div class="col-md-4 mb-3 mb-md-0">
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center text-muted" style="height: 180px; border: 2px dashed var(--border-color);">
+                                            <div class="text-center">
+                                                <i class="bi bi-image fs-1 d-block mb-2"></i>
+                                                <span class="small">No image selected</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <p class="text-muted small">Upload your course image here. It must meet our course image quality standards to be accepted. Important guidelines: 750x422 pixels; .jpg, .jpeg,. gif, or .png. no text on the image.</p>
+                                        <input name="CourseImage" class="form-control" type="file" id="courseImage" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-end mt-4 d-flex justify-content-between">
+                                <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('basic-tab').click()"><i class="bi bi-arrow-left me-1"></i> Previous</button>
+                                <button type="submit" class="btn btn-success">Save Course</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+                <!-- Step 3: Curriculum -->
+                <div class="tab-pane fade" id="curriculum" role="tabpanel" aria-labelledby="curriculum-tab">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4 text-center py-5">
+                            <i class="bi bi-lock text-muted" style="font-size: 3rem;"></i>
+                            <h4 class="mt-3">Save your course first</h4>
+                            <p class="text-muted mb-4">You need to save the course details before you can add curriculum sections and videos.</p>
+                            <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('basic-tab').click()">Go back to Details</button>
+                        </div>
+                    </div>
+                </div>
+
+
+            
+        </div>

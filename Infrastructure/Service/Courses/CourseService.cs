@@ -174,9 +174,9 @@ namespace Infrastructure.Service.Courses
             return Result.Success();
         }
 
-        // ── TOGGLE PUBLISH ───────────────────────────────────────────────────
+        // ── SUBMIT FOR REVIEW ────────────────────────────────────────────
 
-        public async Task<Result<CourseResponseDto>> TogglePublishAsync(int id, string instructorId)
+        public async Task<Result<CourseResponseDto>> SubmitForReviewAsync(int id, string instructorId)
         {
             var course = await _context.Courses
                 .Include(c => c.Category)
@@ -187,28 +187,24 @@ namespace Infrastructure.Service.Courses
                 return Result<CourseResponseDto>.Failure($"Course with ID {id} was not found.");
 
             if (course.InstructorId != instructorId)
-                return Result<CourseResponseDto>.Failure("You are not authorized to publish this course.");
+                return Result<CourseResponseDto>.Failure("You are not authorized to submit this course for review.");
 
-            if (course.Status == CourseStatus.Draft || course.Status == CourseStatus.Archived)
-            {
-                // Validate course is ready to publish
-                var validationError = ValidateForPublishing(course);
-                if (validationError != null)
-                    return Result<CourseResponseDto>.Failure(validationError);
-
-                course.Status    = CourseStatus.SubmittedForApproval;
-                course.UpdatedAt = DateTime.UtcNow;
-            }
-            else if (course.Status == CourseStatus.Published)
-            {
-                // Unpublish: move back to archived
-                course.Status    = CourseStatus.Archived;
-                course.UpdatedAt = DateTime.UtcNow;
-            }
-            else if (course.Status == CourseStatus.SubmittedForApproval)
-            {
+            if (course.Status == CourseStatus.SubmittedForApproval)
                 return Result<CourseResponseDto>.Failure("Course is already submitted for admin approval.");
-            }
+
+            if (course.Status == CourseStatus.Published)
+                return Result<CourseResponseDto>.Failure("Published courses cannot be submitted for review. Contact an admin to archive first.");
+
+            if (course.Status != CourseStatus.Draft && course.Status != CourseStatus.Archived)
+                return Result<CourseResponseDto>.Failure("Only draft or archived courses can be submitted for review.");
+
+            var validationError = ValidateForPublishing(course);
+            if (validationError != null)
+                return Result<CourseResponseDto>.Failure(validationError);
+
+            course.Status = CourseStatus.SubmittedForApproval;
+            course.IsApproved = false;
+            course.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 

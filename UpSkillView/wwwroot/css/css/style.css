@@ -1,0 +1,337 @@
+/* ==================================================
+   LMS Frontend Prototype - Custom Styles
+   ================================================== */
+
+:root {
+    /* Color Palette */
+    --primary-color: #2563EB;
+    --primary-hover: #1d4ed8;
+    --secondary-color: #1E40AF;
+    --success-color: #16A34A;
+    --warning-color: #F59E0B;
+    --danger-color: #DC2626;
+    
+    --bg-main: #F8FAFC;
+    --bg-white: #FFFFFF;
+    
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --text-muted: #94A3B8;
+
+    --border-color: #E2E8F0;
+
+    /* Border Radius */
+    --border-radius-sm: 8px;
+    --border-radius-md: 12px;
+    --border-radius-lg: 16px;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    
+    /* Transitions */
+    --transition-speed: 0.2s;
+}
+
+/* Base Styles */
+body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color var(--transition-speed) ease;
+}
+
+a:hover {
+    color: var(--primary-hover);
+}
+
+p {
+    color: var(--text-secondary);
+}
+
+/* Bootstrap Overrides & Custom Components */
+
+/* Buttons */
+.btn {
+    border-radius: var(--border-radius-sm);
+    font-weight: 500;
+    padding: 0.5rem 1.25rem;
+    transition: all var(--transition-speed) ease;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover, .btn-outline-primary:focus {
+    background-color: var(--primary-color);
+    color: var(--bg-white);
+}
+
+/* Cards */
+.card {
+    background-color: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-speed) ease, transform var(--transition-speed) ease;
+}
+
+.card-hover:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    background-color: var(--bg-white);
+    border-bottom: 1px solid var(--border-color);
+    border-top-left-radius: var(--border-radius-md) !important;
+    border-top-right-radius: var(--border-radius-md) !important;
+    font-weight: 600;
+}
+
+.card-footer {
+    background-color: var(--bg-white);
+    border-top: 1px solid var(--border-color);
+    border-bottom-left-radius: var(--border-radius-md) !important;
+    border-bottom-right-radius: var(--border-radius-md) !important;
+}
+
+/* Form Controls */
+.form-control, .form-select {
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+    padding: 0.6rem 1rem;
+    color: var(--text-primary);
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+}
+
+.form-label {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* Badges */
+.badge {
+    padding: 0.35em 0.65em;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.bg-primary-soft { background-color: rgba(37, 99, 235, 0.1); color: var(--primary-color); }
+.bg-success-soft { background-color: rgba(22, 163, 74, 0.1); color: var(--success-color); }
+.bg-warning-soft { background-color: rgba(245, 158, 11, 0.1); color: var(--warning-color); }
+.bg-danger-soft { background-color: rgba(220, 38, 38, 0.1); color: var(--danger-color); }
+
+/* Progress Bars */
+.progress {
+    border-radius: 10px;
+    background-color: var(--border-color);
+    height: 8px;
+}
+
+.progress-bar {
+    background-color: var(--primary-color);
+    border-radius: 10px;
+}
+
+/* Navbar */
+.navbar {
+    background-color: var(--bg-white);
+    box-shadow: var(--shadow-sm);
+    padding: 1rem 0;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: var(--primary-color) !important;
+}
+
+.nav-link {
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: color var(--transition-speed) ease;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--primary-color);
+}
+
+/* Sidebar (Dashboard Layout) */
+.sidebar {
+    background-color: var(--bg-white);
+    border-right: 1px solid var(--border-color);
+    min-height: calc(100vh - 70px);
+    padding: 1.5rem 1rem;
+    transition: transform var(--transition-speed) ease;
+}
+
+@media (max-width: 991.98px) {
+    .sidebar {
+        position: absolute;
+        z-index: 1040;
+        height: 100%;
+        box-shadow: var(--shadow-lg);
+    }
+}
+
+.sidebar .nav-link {
+    border-radius: var(--border-radius-sm);
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.25rem;
+    color: var(--text-secondary);
+}
+
+.sidebar .nav-link:hover {
+    background-color: rgba(37, 99, 235, 0.05);
+    color: var(--primary-color);
+}
+
+.sidebar .nav-link.active {
+    background-color: rgba(37, 99, 235, 0.1);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.sidebar .nav-icon {
+    width: 20px;
+    margin-right: 10px;
+    text-align: center;
+}
+
+/* Footer */
+.footer {
+    background-color: var(--bg-white);
+    border-top: 1px solid var(--border-color);
+    padding: 3rem 0;
+    margin-top: auto;
+}
+
+.footer-heading {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.footer-link {
+    color: var(--text-secondary);
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.footer-link:hover {
+    color: var(--primary-color);
+}
+
+/* Utilities */
+.text-muted-custom {
+    color: var(--text-muted) !important;
+}
+
+.bg-white-custom {
+    background-color: var(--bg-white) !important;
+}
+
+/* Layout Utilities */
+.dashboard-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.dashboard-main {
+    flex-grow: 1;
+    background-color: var(--bg-main);
+    padding: 2rem 0;
+}
+
+/* Course Card Specific */
+.course-card .card-img-top {
+    height: 180px;
+    object-fit: cover;
+    border-top-left-radius: var(--border-radius-md);
+    border-top-right-radius: var(--border-radius-md);
+}
+
+.course-price {
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+}
+
+.course-instructor {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Accordion Customization */
+.accordion-item {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm) !important;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+}
+
+.accordion-button {
+    font-weight: 600;
+    background-color: var(--bg-white);
+    color: var(--text-primary);
+    box-shadow: none !important;
+}
+
+.accordion-button:not(.collapsed) {
+    color: var(--primary-color);
+    background-color: rgba(37, 99, 235, 0.05);
+}
+
+/* Tables */
+.table-custom th {
+    background-color: var(--bg-main);
+    color: var(--text-secondary);
+    font-weight: 600;
+    border-bottom-width: 1px;
+}
+
+.table-custom td {
+    vertical-align: middle;
+    color: var(--text-primary);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}

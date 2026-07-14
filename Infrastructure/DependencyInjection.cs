@@ -20,6 +20,8 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Application.Admin.Interfaces;
+using Infrastructure.Service.Admin;
 
 namespace Infrastructure
 {
@@ -53,16 +55,39 @@ namespace Infrastructure
 
                     RoleClaimType = ClaimTypes.Role
                 };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        Console.WriteLine("AUTH FAILED:");
+                        Console.WriteLine(context.Exception);
+                        return Task.CompletedTask;
+                    },
+
+                    OnTokenValidated = context =>
+                    {
+                        Console.WriteLine("TOKEN VALIDATED");
+                        return Task.CompletedTask;
+                    },
+
+                    OnChallenge = context =>
+                    {
+                        Console.WriteLine("AUTH CHALLENGE");
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
             // Add DbContext Connection
             services.AddDbContext<AppDBContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("BolaCon")));
+            options.UseSqlServer(configuration.GetConnectionString("ConnectDBS")));
 
             // Adding Identity
             services.AddIdentity<AppUser, IdentityRole>()
                     .AddEntityFrameworkStores<AppDBContext>()
                     .AddDefaultTokenProviders();
+
 
             // Registering Services in DI
             services.AddScoped<ITokenService, TokenService>();
@@ -76,11 +101,15 @@ namespace Infrastructure
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<ICourseService, CourseService>();
 
+            // Admin Module Services (Team Member 5)
+            services.AddScoped<IAdminService, AdminService>();
+
             // Course Content Module Services (Team Member 3)
-            services.AddScoped<Application.CourseContent.Interfaces.ICourseContentService, Infrastructure.Service.CourseContent.CourseContentService>();
-            services.AddScoped<Application.CourseContent.Interfaces.IStudentLearningService, Infrastructure.Service.CourseContent.StudentLearningService>();
+            services.AddScoped<Application.CourseContent.Interfaces.ICourseContentService,
+                Infrastructure.Service.CourseContent.CourseContentService>();
 
-
+            services.AddScoped<Application.CourseContent.Interfaces.IStudentLearningService,
+                Infrastructure.Service.CourseContent.StudentLearningService>();
 
             return services;
         }

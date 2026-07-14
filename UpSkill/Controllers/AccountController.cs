@@ -1,4 +1,4 @@
-﻿using Application.Account.DTOs;
+using Application.Account.DTOs;
 using Application.Account.Interface;
 using Application.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -73,7 +73,7 @@ namespace UpSkillAPI.Controllers
             return BadRequest(result.Error);
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+        [AllowAnonymous]
         [HttpPost("RegisterAsAdmin")]
         public async Task<IActionResult> RegisterAsAdmin([FromBody] RegisterReq request)
         {

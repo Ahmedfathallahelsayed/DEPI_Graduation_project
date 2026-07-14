@@ -1,0 +1,56 @@
+@model List<Application.Courses.DTOs.Course.CourseResponseDto>
+@{
+    ViewData["Title"] = "Instructor Dashboard";
+    Layout = "_DashboardLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Instructor Dashboard</h2>
+        <p class="text-muted mb-0">Welcome back! Here is an overview of your teaching.</p>
+    </div>
+    <a asp-action="MyCourses" class="btn btn-outline-primary d-none d-sm-inline-block">Manage Courses</a>
+</div>
+
+<!-- Stats Row -->
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-xl-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h6 class="text-muted mb-0">Total Courses</h6>
+                    <div class="p-2 bg-primary-soft rounded text-primary">
+                        <i class="bi bi-journal-code"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-0">@(Model?.Count ?? 0)</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h6 class="text-muted mb-0">Published</h6>
+                    <div class="p-2 bg-success-soft rounded text-success">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-0">@(Model?.Count(c => c.Status == Domain.Enum.CourseStatus.Published) ?? 0)</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h6 class="text-muted mb-0">Drafts</h6>
+                    <div class="p-2 bg-warning-soft rounded text-warning">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-0">@(Model?.Count(c => c.Status == Domain.Enum.CourseStatus.Draft) ?? 0)</h3>
+            </div>
+        </div>
+    </div>
+</div>

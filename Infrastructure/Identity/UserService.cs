@@ -1,4 +1,4 @@
-﻿using Application.Common;
+using Application.Common;
 using Application.Identity;
 using Infrastructure.Persistance;
 using Microsoft.AspNetCore.Identity;
@@ -66,7 +66,7 @@ namespace Infrastructure.Services.Identity
 
             if (!result.Succeeded)
             {
-               return Result<string>.Failure(result.Errors.FirstOrDefault().ToString());
+               return Result<string>.Failure(result.Errors.FirstOrDefault()?.Description ?? "User creation failed.");
             }
 
             return Result<string>.Success(user.Id);
