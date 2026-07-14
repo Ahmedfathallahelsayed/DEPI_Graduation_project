@@ -21,6 +21,13 @@ namespace Infrastructure.Service.CourseContent
         // Sections
         public async Task<SectionDto> CreateSectionAsync(CreateSectionDto dto)
         {
+            // Validate if the course exists before adding the section
+            var courseExists = await _context.Courses.AnyAsync(c => c.Id == dto.CourseId);
+            if (!courseExists)
+            {
+                throw new System.ArgumentException($"Course with ID {dto.CourseId} does not exist.");
+            }
+
             var section = new CourseSection
             {
                 CourseId = dto.CourseId,
@@ -75,9 +82,9 @@ namespace Infrastructure.Service.CourseContent
                 SectionId = dto.SectionId,
                 Title = dto.Title,
                 ContentType = dto.ContentType,
-                VideoUrl = dto.VideoUrl,
-                TextContent = dto.TextContent,
-                AttachmentUrl = dto.AttachmentUrl,
+                VideoUrl = dto.VideoUrl ?? "",
+                TextContent = dto.TextContent ?? "",
+                AttachmentUrl = dto.AttachmentUrl ?? "",
                 DurationInMinutes = dto.DurationInMinutes,
                 DisplayOrder = dto.DisplayOrder,
                 IsPreview = dto.IsPreview
@@ -96,9 +103,9 @@ namespace Infrastructure.Service.CourseContent
 
             lesson.Title = dto.Title;
             lesson.ContentType = dto.ContentType;
-            lesson.VideoUrl = dto.VideoUrl;
-            lesson.TextContent = dto.TextContent;
-            lesson.AttachmentUrl = dto.AttachmentUrl;
+            lesson.VideoUrl = dto.VideoUrl ?? "";
+            lesson.TextContent = dto.TextContent ?? "";
+            lesson.AttachmentUrl = dto.AttachmentUrl ?? "";
             lesson.DurationInMinutes = dto.DurationInMinutes;
             lesson.DisplayOrder = dto.DisplayOrder;
             lesson.IsPreview = dto.IsPreview;
