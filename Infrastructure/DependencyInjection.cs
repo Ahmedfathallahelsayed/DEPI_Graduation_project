@@ -85,7 +85,7 @@ namespace Infrastructure
 
             // Add DbContext Connection
             services.AddDbContext<AppDBContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("ConnectDBS")));
+            options.UseSqlServer(configuration.GetConnectionString("MoneerCon")));
 
             // Registering Repos contracts
             services.AddScoped<ICategory, CategoryRepo>();
@@ -117,6 +117,9 @@ namespace Infrastructure
             // Course Module Services (Team Member 2)
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<ICourseService, CourseService>();
+            services.AddScoped<ICourseSectionService, CourseSectionService>();
+            services.AddScoped<ILessonService, LessonService>();
+            services.AddScoped<IStudentFlowService, StudentFlowService>();
 
             // Admin Module Services (Team Member 5)
             services.AddScoped<IAdminService, AdminService>();

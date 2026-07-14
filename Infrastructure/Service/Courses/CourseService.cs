@@ -135,7 +135,7 @@ namespace Infrastructure.Service.Courses
             
             course.UpdatedAt        = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
 
             // Fetch instructor name for response
             var instructorName = await _userService.GetUserFullNameAsync(instructorId);
@@ -175,12 +175,6 @@ namespace Infrastructure.Service.Courses
         public async Task<Result<CourseResponseDto>> SubmitForReviewAsync(int id, string instructorId)
         {
             var course = await _unitOfWork.CourseRepo.GetByIdWithDetailsAsync(id);
-            var course = await _context.Courses
-                .Include(c => c.Category)
-                .Include(c => c.Enrollments)
-                .Include(c => c.CourseSections)
-                    .ThenInclude(s => s.Lessons)
-                .FirstOrDefaultAsync(c => c.Id == id);
 
             if (course is null)
                 return Result<CourseResponseDto>.Failure($"Course with ID {id} was not found.");

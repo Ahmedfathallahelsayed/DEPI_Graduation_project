@@ -1,0 +1,16 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "UpSkill\\UpSkillAPI.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "UpSkillView\\UpSkillMVC.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      }
+    ]
+  }
+]
