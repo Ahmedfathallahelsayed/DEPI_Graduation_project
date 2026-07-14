@@ -57,7 +57,7 @@ namespace Infrastructure
 
             // Add DbContext Connection
             services.AddDbContext<AppDBContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("MostafaCon")));
+            options.UseSqlServer(configuration.GetConnectionString("BolaCon")));
 
             // Adding Identity
             services.AddIdentity<AppUser, IdentityRole>()

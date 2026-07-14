@@ -8,9 +8,9 @@ namespace Application.CourseContent.DTOs
         public int SectionId { get; set; }
         public string Title { get; set; }
         public LessonContentType ContentType { get; set; }
-        public string VideoUrl { get; set; }
-        public string TextContent { get; set; }
-        public string AttachmentUrl { get; set; }
+        public string? VideoUrl { get; set; }
+        public string? TextContent { get; set; }
+        public string? AttachmentUrl { get; set; }
         public int DurationInMinutes { get; set; }
         public int DisplayOrder { get; set; }
         public bool IsPreview { get; set; }
@@ -22,9 +22,9 @@ namespace Application.CourseContent.DTOs
         public int SectionId { get; set; }
         public string Title { get; set; }
         public LessonContentType ContentType { get; set; }
-        public string VideoUrl { get; set; }
-        public string TextContent { get; set; }
-        public string AttachmentUrl { get; set; }
+        public string? VideoUrl { get; set; }
+        public string? TextContent { get; set; }
+        public string? AttachmentUrl { get; set; }
         public int DurationInMinutes { get; set; }
         public int DisplayOrder { get; set; }
         public bool IsPreview { get; set; }

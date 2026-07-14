@@ -28,8 +28,15 @@ namespace UpSkillAPI.Controllers
         [HttpPost("sections")]
         public async Task<IActionResult> CreateSection([FromBody] CreateSectionDto dto)
         {
-            var section = await _courseContentService.CreateSectionAsync(dto);
-            return Ok(section);
+            try
+            {
+                var section = await _courseContentService.CreateSectionAsync(dto);
+                return Ok(section);
+            }
+            catch (System.ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPut("sections/{id}")]
@@ -69,6 +76,56 @@ namespace UpSkillAPI.Controllers
             var result = await _courseContentService.DeleteLessonAsync(id);
             if (!result) return NotFound("Lesson not found");
             return Ok("Lesson deleted successfully");
+        }
+
+        // ── Helper Endpoint for Testing ─────────────────────────────────
+        [HttpPost("seed-dummy-course")]
+        [AllowAnonymous]
+        public async Task<IActionResult> SeedDummyCourse([FromServices] Infrastructure.Persistance.DbContext.AppDBContext dbContext)
+        {
+            // 1. Create a dummy Category if none exists
+            var category = dbContext.Categories.FirstOrDefault();
+            if (category == null)
+            {
+                category = new Domain.Entity.Category { Name = "Test Category", Description = "For Testing" };
+                dbContext.Categories.Add(category);
+                await dbContext.SaveChangesAsync();
+            }
+
+            // 2. Create a dummy User (Instructor) if none exists
+            var user = dbContext.Users.FirstOrDefault(u => u.Email == "test@instructor.com");
+            if (user == null)
+            {
+                user = new Infrastructure.Persistance.AppUser 
+                { 
+                    UserName = "test_instructor", 
+                    Email = "test@instructor.com",
+                    FullName = "Test Instructor" 
+                };
+                dbContext.Users.Add(user);
+                await dbContext.SaveChangesAsync();
+            }
+
+            // 3. Create a dummy Course
+            var course = new Domain.Entity.Course
+            {
+                Title = "كورس تجريبي لـ Member 3",
+                ShortDescription = "وصف قصير للتجربة",
+                Description = "هذا الكورس تم إنشاؤه تلقائياً لتجربة الـ Sections والـ Lessons",
+                ThumbnailUrl = "https://example.com/thumbnail.png",
+                Price = 0,
+                Language = "Arabic",
+                CategoryId = category.Id,
+                InstructorId = user.Id
+            };
+            dbContext.Courses.Add(course);
+            await dbContext.SaveChangesAsync();
+
+            return Ok(new { 
+                Message = "تم إنشاء كورس وهمي بنجاح عشان تجرب عليه!", 
+                CourseId = course.Id,
+                CourseTitle = course.Title
+            });
         }
     }
 }
