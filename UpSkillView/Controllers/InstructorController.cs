@@ -72,5 +72,45 @@ namespace UpSkillView.Controllers
         {
             return View();
         }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateCourse(UpSkillView.Models.Instructor.CreateCourseViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var client = GetAuthenticatedClient();
+
+            using var content = new MultipartFormDataContent();
+            content.Add(new StringContent(model.CourseTitle ?? ""), "Title");
+            content.Add(new StringContent(model.CourseSubtitle ?? ""), "ShortDescription");
+            content.Add(new StringContent(model.CourseDescription ?? ""), "Description");
+            content.Add(new StringContent(model.CategoryId.ToString()), "CategoryId");
+            content.Add(new StringContent(model.Level.ToString()), "Level");
+            content.Add(new StringContent(model.Price.ToString()), "Price");
+            content.Add(new StringContent(model.Language ?? "English"), "Language");
+
+            if (model.CourseImage != null)
+            {
+                var streamContent = new StreamContent(model.CourseImage.OpenReadStream());
+                streamContent.Headers.ContentType = new MediaTypeHeaderValue(model.CourseImage.ContentType);
+                content.Add(streamContent, "ThumbnailFile", model.CourseImage.FileName);
+            }
+
+            var response = await client.PostAsync("api/course", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["SuccessMessage"] = "Course created successfully!";
+                return RedirectToAction("MyCourses");
+            }
+
+            var errorResponse = await response.Content.ReadAsStringAsync();
+            ModelState.AddModelError(string.Empty, $"Failed to create course. Error: {errorResponse}");
+            
+            return View(model);
+        }
     }
 }

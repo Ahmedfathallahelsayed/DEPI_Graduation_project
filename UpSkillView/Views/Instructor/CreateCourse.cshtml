@@ -1,9 +1,11 @@
+@model UpSkillView.Models.Instructor.CreateCourseViewModel
 @{
     ViewData["Title"] = "Create Course";
     Layout = "_DashboardLayout";
 }
 
 <div class="dashboard-main flex-grow-1 p-4 w-100">
+    <form asp-action="CreateCourse" method="post" enctype="multipart/form-data">
             
             <nav aria-label="breadcrumb" class="mb-3">
                 <ol class="breadcrumb">
@@ -18,10 +20,16 @@
                     <p class="text-muted mb-0">Fill in the details to publish your course.</p>
                 </div>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-outline-secondary">Save Draft</button>
-                    <button class="btn btn-primary">Publish Course</button>
+                    <button type="submit" class="btn btn-primary">Save Course</button>
                 </div>
             </div>
+            
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                </div>
+            }
 
             <!-- Course Creation Wizard Tabs -->
             <ul class="nav nav-pills mb-4 bg-white p-2 rounded shadow-sm border" id="courseCreationTabs" role="tablist">
@@ -147,102 +155,26 @@
                             </div>
                             
                             <div class="text-end mt-4 d-flex justify-content-between">
-                                <button class="btn btn-outline-secondary" onclick="document.getElementById('basic-tab').click()"><i class="bi bi-arrow-left me-1"></i> Previous</button>
-                                <button class="btn btn-primary" onclick="document.getElementById('curriculum-tab').click()">Next: Curriculum <i class="bi bi-arrow-right ms-1"></i></button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('basic-tab').click()"><i class="bi bi-arrow-left me-1"></i> Previous</button>
+                                <button type="submit" class="btn btn-success">Save Course</button>
                             </div>
                         </div>
                     </div>
                 </div>
+            </form>
 
                 <!-- Step 3: Curriculum -->
                 <div class="tab-pane fade" id="curriculum" role="tabpanel" aria-labelledby="curriculum-tab">
                     <div class="card border-0 shadow-sm">
-                        <div class="card-body p-4">
-                            <div class="d-flex justify-content-between align-items-center mb-4">
-                                <h5 class="mb-0">Curriculum</h5>
-                                <button class="btn btn-outline-primary btn-sm"><i class="bi bi-plus-lg"></i> Add Section</button>
-                            </div>
-                            
-                            <p class="text-muted mb-4">Start putting together your course by creating sections, lectures and practice activities.</p>
-
-                            <!-- Section 1 -->
-                            <div class="card border mb-4">
-                                <div class="card-header bg-light d-flex justify-content-between align-items-center py-3">
-                                    <div class="d-flex align-items-center">
-                                        <i class="bi bi-list text-muted me-3" style="cursor: grab;"></i>
-                                        <h6 class="mb-0 fw-bold">Section 1: Introduction</h6>
-                                    </div>
-                                    <div class="d-flex gap-2">
-                                        <button class="btn btn-sm btn-link text-muted p-0"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-link text-danger p-0"><i class="bi bi-trash"></i></button>
-                                    </div>
-                                </div>
-                                <div class="card-body p-3 bg-white">
-                                    
-                                    <!-- Lesson Item -->
-                                    <div class="card border mb-2 border-start border-4 border-start-primary">
-                                        <div class="card-body p-2 d-flex justify-content-between align-items-center">
-                                            <div class="d-flex align-items-center">
-                                                <i class="bi bi-list text-muted me-3 ms-1" style="cursor: grab;"></i>
-                                                <i class="bi bi-play-circle text-muted me-2"></i>
-                                                <span class="fw-medium">1. Welcome to the course</span>
-                                            </div>
-                                            <div class="d-flex gap-3 align-items-center">
-                                                <span class="badge bg-success-soft">Published</span>
-                                                <button class="btn btn-sm btn-outline-secondary">Content</button>
-                                                <div class="dropdown">
-                                                    <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                        <i class="bi bi-three-dots-vertical"></i>
-                                                    </button>
-                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                                        <li><a class="dropdown-item" href="#"><i class="bi bi-pencil me-2 text-muted"></i> Edit</a></li>
-                                                        <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-trash me-2"></i> Delete</a></li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Lesson Item -->
-                                    <div class="card border border-start border-4 border-start-warning">
-                                        <div class="card-body p-2 d-flex justify-content-between align-items-center">
-                                            <div class="d-flex align-items-center">
-                                                <i class="bi bi-list text-muted me-3 ms-1" style="cursor: grab;"></i>
-                                                <i class="bi bi-file-earmark-text text-muted me-2"></i>
-                                                <span class="fw-medium">2. Course Setup & Installation</span>
-                                            </div>
-                                            <div class="d-flex gap-3 align-items-center">
-                                                <span class="badge bg-warning-soft text-dark">Draft</span>
-                                                <button class="btn btn-sm btn-primary"><i class="bi bi-plus"></i> Content</button>
-                                                <div class="dropdown">
-                                                    <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                        <i class="bi bi-three-dots-vertical"></i>
-                                                    </button>
-                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                                        <li><a class="dropdown-item" href="#"><i class="bi bi-pencil me-2 text-muted"></i> Edit</a></li>
-                                                        <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-trash me-2"></i> Delete</a></li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-3 ps-5">
-                                        <button class="btn btn-sm btn-outline-primary border-dashed w-100"><i class="bi bi-plus"></i> Curriculum Item</button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="text-end mt-4 d-flex justify-content-between">
-                                <button class="btn btn-outline-secondary" onclick="document.getElementById('details-tab').click()"><i class="bi bi-arrow-left me-1"></i> Previous</button>
-                                <button class="btn btn-success">Save & Publish Course</button>
-                            </div>
+                        <div class="card-body p-4 text-center py-5">
+                            <i class="bi bi-lock text-muted" style="font-size: 3rem;"></i>
+                            <h4 class="mt-3">Save your course first</h4>
+                            <p class="text-muted mb-4">You need to save the course details before you can add curriculum sections and videos.</p>
+                            <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('basic-tab').click()">Go back to Details</button>
                         </div>
                     </div>
                 </div>
 
-            </div>
+
             
-        </di
-
-
+        </div>
