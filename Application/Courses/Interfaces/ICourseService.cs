@@ -40,12 +40,10 @@ namespace Application.Courses.Interfaces
         Task<Result> DeleteAsync(int id, string instructorId);
 
         /// <summary>
-        /// Toggle course publish status.
-        /// Draft → SubmittedForApproval (or Published if auto-approved).
-        /// Published → Archived.
-        /// Validates that course has title, description, price, and category before publishing.
+        /// Submit a draft course for admin review.
+        /// Does not publish — only Admin can publish.
         /// </summary>
-        Task<Result<CourseResponseDto>> TogglePublishAsync(int id, string instructorId);
+        Task<Result<CourseResponseDto>> SubmitForReviewAsync(int id, string instructorId);
 
         // ── Public / Catalog Operations (used by TM4 - Student flow) ────────
 
