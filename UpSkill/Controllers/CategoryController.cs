@@ -1,5 +1,6 @@
 using Application.Courses.DTOs.Category;
 using Application.Courses.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -31,7 +32,7 @@ namespace UpSkill.Controllers
         // ── GET /api/category/all ─────────────────────────────────────────
         /// <summary>Get ALL categories including inactive. Admin only.</summary>
         [HttpGet("all")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         public async Task<IActionResult> GetAllForAdmin()
         {
             var result = await _categoryService.GetAllAsync();
@@ -55,7 +56,7 @@ namespace UpSkill.Controllers
         // ── POST /api/category ────────────────────────────────────────────
         /// <summary>Create a new category. Admin only.</summary>
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         public async Task<IActionResult> Create([FromBody] CreateCategoryDto dto)
         {
             if (!ModelState.IsValid)
@@ -70,7 +71,7 @@ namespace UpSkill.Controllers
         // ── PUT /api/category/{id} ────────────────────────────────────────
         /// <summary>Update an existing category. Admin only.</summary>
         [HttpPut("{id:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateCategoryDto dto)
         {
             if (!ModelState.IsValid)
@@ -85,7 +86,7 @@ namespace UpSkill.Controllers
         // ── DELETE /api/category/{id} ─────────────────────────────────────
         /// <summary>Delete a category. Admin only. Fails if courses are assigned to it.</summary>
         [HttpDelete("{id:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _categoryService.DeleteAsync(id);

@@ -1,5 +1,6 @@
 using Application.Courses.DTOs.Course;
 using Application.Courses.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -61,7 +62,7 @@ namespace UpSkill.Controllers
         // ── GET /api/course/my-courses ────────────────────────────────────
         /// <summary>Get all courses belonging to the logged-in instructor.</summary>
         [HttpGet("my-courses")]
-        [Authorize(Roles = "Instructor")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Instructor")]
         public async Task<IActionResult> GetMyCourses()
         {
             var instructorId = GetCurrentUserId();
@@ -77,7 +78,7 @@ namespace UpSkill.Controllers
         /// Only the owning instructor can access.
         /// </summary>
         [HttpGet("my-courses/{id:int}")]
-        [Authorize(Roles = "Instructor")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Instructor")]
         public async Task<IActionResult> GetMyCoursesById(int id)
         {
             var instructorId = GetCurrentUserId();
@@ -93,7 +94,7 @@ namespace UpSkill.Controllers
         /// Send as multipart/form-data to include a thumbnail image.
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = "Instructor")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Instructor")]
         public async Task<IActionResult> Create([FromForm] CreateCourseDto dto)
         {
             if (!ModelState.IsValid)
@@ -114,7 +115,7 @@ namespace UpSkill.Controllers
         /// Send as multipart/form-data to replace thumbnail.
         /// </summary>
         [HttpPut("{id:int}")]
-        [Authorize(Roles = "Instructor")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Instructor")]
         public async Task<IActionResult> Update(int id, [FromForm] UpdateCourseDto dto)
         {
             if (!ModelState.IsValid)
@@ -134,7 +135,7 @@ namespace UpSkill.Controllers
         /// Cannot delete published courses or courses with enrolled students.
         /// </summary>
         [HttpDelete("{id:int}")]
-        [Authorize(Roles = "Instructor")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Instructor")]
         public async Task<IActionResult> Delete(int id)
         {
             var instructorId = GetCurrentUserId();
@@ -153,7 +154,7 @@ namespace UpSkill.Controllers
         /// Validates required fields before submitting for approval.
         /// </summary>
         [HttpPut("{id:int}/toggle-publish")]
-        [Authorize(Roles = "Instructor")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Instructor")]
         public async Task<IActionResult> TogglePublish(int id)
         {
             var instructorId = GetCurrentUserId();
