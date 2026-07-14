@@ -1,0 +1,587 @@
+@model UpSkillView.Models.Instructor.ManageContentViewModel
+@{
+    ViewData["Title"] = "Manage Curriculum";
+    Layout = "_DashboardLayout";
+    var isDraft = Model.Course.Status == Domain.Enum.CourseStatus.Draft;
+    var totalLessons = Model.Sections.Sum(s => s.Lessons?.Count ?? 0);
+}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a asp-controller="Instructor" asp-action="MyCourses" class="text-decoration-none">My Courses</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a asp-controller="Instructor" asp-action="EditCourse" asp-route-id="@Model.Course.Id" class="text-decoration-none">@Model.Course.Title</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">Manage Curriculum</li>
+    </ol>
+</nav>
+
+<!-- Page Header -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+        <h2 class="mb-1">Manage Curriculum</h2>
+        <p class="text-muted mb-0">
+            <strong>@Model.Course.Title</strong>
+            &nbsp;·&nbsp;
+            <span class="badge bg-secondary-soft small">@Model.Sections.Count section@(Model.Sections.Count != 1 ? "s" : "")</span>
+            <span class="badge bg-secondary-soft small ms-1">@totalLessons lesson@(totalLessons != 1 ? "s" : "")</span>
+        </p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <!-- Quick Edit Course link -->
+        <a asp-action="EditCourse" asp-route-id="@Model.Course.Id" class="btn btn-outline-secondary">
+            <i class="bi bi-pencil-square me-1"></i> Edit Info
+        </a>
+
+        <!-- Submit for Review shortcut — only visible for Draft courses with content -->
+        @if (isDraft && Model.Sections.Any() && totalLessons > 0)
+        {
+            <form asp-action="SubmitForReview" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Course.Id" />
+                <button type="submit" class="btn btn-outline-warning"
+                        title="Submit this course for admin review">
+                    <i class="bi bi-send me-1"></i> Submit for Review
+                </button>
+            </form>
+        }
+
+        <!-- Add Section -->
+        <button class="btn btn-primary d-flex align-items-center gap-2"
+                data-bs-toggle="modal" data-bs-target="#addSectionModal">
+            <i class="bi bi-plus-lg"></i> Add Section
+        </button>
+    </div>
+</div>
+
+<!-- Alerts -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show d-flex align-items-center mb-4" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Curriculum Content -->
+<div class="row">
+    <div class="col-12">
+        @if (Model.Sections != null && Model.Sections.Any())
+        {
+            <div class="accordion" id="curriculumAccordion">
+                @for (int i = 0; i < Model.Sections.Count; i++)
+                {
+                    var sec        = Model.Sections[i];
+                    var collapseId = $"collapseSection_{sec.Id}";
+                    var headerId   = $"headerSection_{sec.Id}";
+                    var isFirst    = (i == 0);
+                    var lessonCount = sec.Lessons?.Count ?? 0;
+
+                    <div class="accordion-item border-0 shadow-sm mb-3 rounded-3 overflow-hidden">
+                        <div class="accordion-header bg-white" id="@headerId">
+                            <div class="d-flex align-items-center w-100 justify-content-between py-3 px-4">
+
+                                <!-- Expand / Collapse Toggle -->
+                                <button class="accordion-button bg-white text-dark border-0 p-0 shadow-none fw-semibold d-flex align-items-center gap-2 @(!isFirst ? "collapsed" : "")"
+                                        type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#@collapseId"
+                                        aria-expanded="@(isFirst ? "true" : "false")"
+                                        aria-controls="@collapseId">
+                                    <i class="bi bi-folder-fill text-primary fs-5"></i>
+                                    <span>Section @(i + 1): @(sec.Title)</span>
+                                    <span class="badge bg-secondary-soft text-dark ms-2 small">
+                                        @lessonCount lesson@(lessonCount != 1 ? "s" : "")
+                                    </span>
+                                </button>
+
+                                <!-- Actions -->
+                                <div class="d-flex align-items-center gap-2 ms-3">
+                                    <!-- Edit Section -->
+                                    <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editSectionModal"
+                                            data-sec-id="@(sec.Id)"
+                                            data-sec-title="@(sec.Title)"
+                                            data-sec-order="@(sec.DisplayOrder)"
+                                            data-course-id="@Model.Course.Id">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+
+                                    <button class="btn btn-sm btn-outline-success d-flex align-items-center gap-1"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#addLessonModal"
+                                            data-section-id="@(sec.Id)"
+                                            data-section-title="@(sec.Title)"
+                                            data-lesson-count="@lessonCount">
+                                        <i class="bi bi-plus-lg"></i> Add Lesson
+                                    </button>
+
+                                    <form asp-action="DeleteSection" method="post"
+                                          onsubmit="return confirm('Delete this section and all its lessons?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@(sec.Id)" />
+                                        <input type="hidden" name="courseId" value="@Model.Course.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Section">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Accordion Body — no data-bs-parent so ALL sections can be open simultaneously -->
+                        <div id="@collapseId"
+                             class="accordion-collapse collapse @(isFirst ? "show" : "")"
+                             aria-labelledby="@headerId">
+                            <div class="accordion-body bg-light-subtle border-top py-3 px-4">
+
+                                @if (sec.Lessons != null && sec.Lessons.Any())
+                                {
+                                    <div class="list-group list-group-flush rounded-2 border">
+                                        @foreach (var lesson in sec.Lessons.OrderBy(l => l.DisplayOrder))
+                                        {
+                                            <div class="list-group-item d-flex align-items-center justify-content-between py-3">
+                                                <div class="d-flex align-items-center gap-3">
+                                                    @if (lesson.ContentType == Domain.Enum.LessonContentType.Video)
+                                                    {
+                                                        <i class="bi bi-play-circle-fill text-danger fs-5"></i>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="bi bi-file-earmark-text-fill text-info fs-5"></i>
+                                                    }
+                                                    <div>
+                                                        <div class="fw-semibold text-dark">@lesson.Title</div>
+                                                        <div class="text-muted small d-flex align-items-center gap-2">
+                                                            <span><i class="bi bi-clock me-1"></i>@lesson.DurationInMinutes min</span>
+                                                            @if (lesson.IsPreview)
+                                                            {
+                                                                <span class="badge bg-success-soft text-success">Free Preview</span>
+                                                            }
+                                                            @if (!string.IsNullOrEmpty(lesson.VideoUrl))
+                                                            {
+                                                                <a href="@lesson.VideoUrl" target="_blank" class="text-muted small" title="View video">
+                                                                    <i class="bi bi-box-arrow-up-right"></i>
+                                                                </a>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <form asp-action="DeleteLesson" method="post"
+                                                      onsubmit="return confirm('Delete lesson &quot;@Html.Raw(lesson.Title)&quot;?')">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@lesson.Id" />
+                                                    <input type="hidden" name="courseId" value="@Model.Course.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Delete Lesson">
+                                                        <i class="bi bi-trash-fill"></i>
+                                                    </button>
+                                                </form>
+
+                                                <!-- Edit Lesson -->
+                                                <button class="btn btn-sm btn-outline-secondary border-0" title="Edit Lesson"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#editLessonModal"
+                                                        data-lesson-id="@lesson.Id"
+                                                        data-lesson-title="@lesson.Title"
+                                                        data-lesson-type="@((int)lesson.ContentType)"
+                                                        data-lesson-url="@(lesson.VideoUrl ?? "")"
+                                                        data-lesson-text="@(lesson.TextContent ?? "")"
+                                                        data-lesson-duration="@lesson.DurationInMinutes"
+                                                        data-lesson-order="@lesson.DisplayOrder"
+                                                        data-lesson-preview="@lesson.IsPreview.ToString().ToLower()"
+                                                        data-course-id="@Model.Course.Id">
+                                                    <i class="bi bi-pencil-fill"></i>
+                                                </button>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="text-center py-4 text-muted small">
+                                        <i class="bi bi-file-earmark-play fs-2 mb-2 d-block text-muted"></i>
+                                        No lessons yet. Click <strong>Add Lesson</strong> above to get started.
+                                    </div>
+                                }
+
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="card border-0 shadow-sm rounded-3 py-5 text-center">
+                <div class="card-body">
+                    <i class="bi bi-folder-plus text-muted" style="font-size:3.5rem;"></i>
+                    <h4 class="mt-3 mb-2">Create your curriculum structure</h4>
+                    <p class="text-muted mb-4">Start by adding a section (e.g. "Chapter 1: Getting Started").</p>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSectionModal">
+                        <i class="bi bi-plus-lg me-2"></i>Add Your First Section
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- ==========================================
+     MODALS
+     ========================================== -->
+
+<!-- Add Section Modal -->
+<div class="modal fade" id="addSectionModal" tabindex="-1" aria-labelledby="addSectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="addSectionModalLabel">
+                    <i class="bi bi-folder-plus me-2 text-primary"></i>Add Section
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="AddSection" method="post" id="addSectionForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="courseId" value="@Model.Course.Id" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="sectionTitle" class="form-label">
+                            Section Title <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="title" class="form-control" id="sectionTitle"
+                               placeholder="e.g. Chapter 1: Introduction"
+                               minlength="3" maxlength="200" required />
+                        <div class="form-text">Min 3 characters. Max 200.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sectionOrder" class="form-label">Display Order</label>
+                        <input type="number" name="displayOrder" class="form-control" id="sectionOrder"
+                               value="@((Model.Sections?.Count ?? 0) + 1)" min="1" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Section</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Lesson Modal -->
+<div class="modal fade" id="addLessonModal" tabindex="-1" aria-labelledby="addLessonModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="addLessonModalLabel">
+                    <i class="bi bi-file-earmark-plus me-2 text-success"></i>Add Lesson
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="AddLesson" method="post" id="addLessonForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="courseId" value="@Model.Course.Id" />
+                <input type="hidden" name="sectionId" id="modalSectionId" value="" />
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <span class="text-muted small">Adding to section: <strong id="modalSectionTitle" class="text-dark"></strong></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="lessonTitle" class="form-label">
+                            Lesson Title <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="title" class="form-control" id="lessonTitle"
+                               placeholder="e.g. Introduction to MVC"
+                               minlength="3" maxlength="200" required />
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="lessonType" class="form-label">Content Type</label>
+                            <select name="contentType" class="form-select" id="lessonType" onchange="toggleContentFields()">
+                                <option value="0">Video</option>
+                                <option value="1">Text Content</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="lessonDuration" class="form-label">Duration (Minutes)</label>
+                            <input type="number" name="durationInMinutes" class="form-control"
+                                   id="lessonDuration" value="10" min="1" max="600" required />
+                        </div>
+                    </div>
+
+                    <!-- Video URL Field -->
+                    <div class="mb-3" id="videoUrlField">
+                        <label for="lessonVideoUrl" class="form-label">
+                            Video URL <span class="text-danger">*</span>
+                            <span class="text-muted small fw-normal">(YouTube / Vimeo)</span>
+                        </label>
+                        <input type="url" name="videoUrl" class="form-control" id="lessonVideoUrl"
+                               placeholder="https://www.youtube.com/watch?v=..." required />
+                        <div class="form-text">Paste a YouTube or Vimeo link.</div>
+                    </div>
+
+                    <!-- Text Content Field -->
+                    <div class="mb-3 d-none" id="textContentField">
+                        <label for="lessonTextContent" class="form-label">Text Content</label>
+                        <textarea name="textContent" class="form-control" id="lessonTextContent"
+                                  rows="4" placeholder="Write lesson content here..."></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="lessonOrder" class="form-label">Display Order</label>
+                            <input type="number" name="displayOrder" class="form-control"
+                                   id="lessonOrder" value="1" min="1" required />
+                        </div>
+                        <div class="col-md-6 mb-3 d-flex align-items-end ps-4 pb-2">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="isPreview"
+                                       id="lessonPreview" value="true" />
+                                <label class="form-check-label fw-medium" for="lessonPreview">
+                                    Free Preview
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save Lesson</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Section Modal -->
+<div class="modal fade" id="editSectionModal" tabindex="-1" aria-labelledby="editSectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="editSectionModalLabel">
+                    <i class="bi bi-pencil-square me-2 text-primary"></i>Edit Section
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="EditSection" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="editSectionId" value="" />
+                <input type="hidden" name="courseId" id="editSectionCourseId" value="" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editSectionTitle" class="form-label">
+                            Section Title <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="title" id="editSectionTitle" class="form-control"
+                               minlength="3" maxlength="150" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="editSectionOrder" class="form-label">Display Order</label>
+                        <input type="number" name="displayOrder" id="editSectionOrder"
+                               class="form-control" min="1" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Lesson Modal -->
+<div class="modal fade" id="editLessonModal" tabindex="-1" aria-labelledby="editLessonModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="editLessonModalLabel">
+                    <i class="bi bi-pencil-square me-2 text-success"></i>Edit Lesson
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="EditLesson" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="editLessonId" value="" />
+                <input type="hidden" name="courseId" id="editLessonCourseId" value="" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editLessonTitle" class="form-label">
+                            Lesson Title <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="title" id="editLessonTitle" class="form-control"
+                               minlength="3" maxlength="200" required />
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="editLessonType" class="form-label">Content Type</label>
+                            <select name="contentType" id="editLessonType" class="form-select"
+                                    onchange="toggleEditContentFields()">
+                                <option value="0">Video</option>
+                                <option value="1">Text Content</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="editLessonDuration" class="form-label">Duration (Minutes)</label>
+                            <input type="number" name="durationInMinutes" id="editLessonDuration"
+                                   class="form-control" min="1" max="600" required />
+                        </div>
+                    </div>
+                    <div class="mb-3" id="editVideoUrlField">
+                        <label for="editLessonVideoUrl" class="form-label">
+                            Video URL <span class="text-danger">*</span>
+                        </label>
+                        <input type="url" name="videoUrl" id="editLessonVideoUrl" class="form-control"
+                               placeholder="https://www.youtube.com/watch?v=..." required />
+                    </div>
+                    <div class="mb-3 d-none" id="editTextContentField">
+                        <label for="editLessonTextContent" class="form-label">Text Content</label>
+                        <textarea name="textContent" id="editLessonTextContent"
+                                  class="form-control" rows="4"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="editLessonOrder" class="form-label">Display Order</label>
+                            <input type="number" name="displayOrder" id="editLessonOrder"
+                                   class="form-control" min="1" required />
+                        </div>
+                        <div class="col-md-6 mb-3 d-flex align-items-end ps-4 pb-2">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="isPreview"
+                                       id="editLessonPreview" value="true" />
+                                <label class="form-check-label fw-medium" for="editLessonPreview">
+                                    Free Preview
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-save me-1"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // ── Add Lesson Modal: inject section context ──────────────────────────
+        const addLessonModal = document.getElementById('addLessonModal');
+        if (addLessonModal) {
+            addLessonModal.addEventListener('show.bs.modal', function (event) {
+                const btn          = event.relatedTarget;
+                const sectionId    = btn.getAttribute('data-section-id');
+                const sectionTitle = btn.getAttribute('data-section-title');
+                const lessonCount  = parseInt(btn.getAttribute('data-lesson-count') || '0');
+
+                document.getElementById('modalSectionId').value        = sectionId;
+                document.getElementById('modalSectionTitle').textContent = sectionTitle;
+
+                // Auto-set display order = existing lessons + 1
+                document.getElementById('lessonOrder').value = lessonCount + 1;
+
+                // Reset form fields for clean entry
+                document.getElementById('lessonTitle').value    = '';
+                document.getElementById('lessonDuration').value = '10';
+                document.getElementById('lessonVideoUrl').value = '';
+                document.getElementById('lessonTextContent').value = '';
+                document.getElementById('lessonPreview').checked = false;
+                document.getElementById('lessonType').value = '0';
+                toggleContentFields(); // reset to Video view
+            });
+        }
+
+        // ── Toggle Video / Text fields + required attribute ───────────────────
+        function toggleContentFields() {
+            const lessonType  = document.getElementById('lessonType').value;
+            const videoField  = document.getElementById('videoUrlField');
+            const textField   = document.getElementById('textContentField');
+            const videoInput  = document.getElementById('lessonVideoUrl');
+
+            if (lessonType === "0") {           // Video
+                videoField.classList.remove('d-none');
+                textField.classList.add('d-none');
+                videoInput.setAttribute('required', 'required');
+            } else {                            // Text
+                videoField.classList.add('d-none');
+                textField.classList.remove('d-none');
+                videoInput.removeAttribute('required');
+            }
+        }
+
+        // ── Reset Add Section form when modal is closed ───────────────────────
+        document.getElementById('addSectionModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('addSectionForm').reset();
+        });
+
+        // ── Edit Section Modal: pre-fill data ─────────────────────────────────
+        document.getElementById('editSectionModal').addEventListener('show.bs.modal', function (e) {
+            const btn = e.relatedTarget;
+            document.getElementById('editSectionId').value      = btn.getAttribute('data-sec-id');
+            document.getElementById('editSectionCourseId').value = btn.getAttribute('data-course-id');
+            document.getElementById('editSectionTitle').value   = btn.getAttribute('data-sec-title');
+            document.getElementById('editSectionOrder').value   = btn.getAttribute('data-sec-order');
+        });
+
+        // ── Edit Lesson Modal: pre-fill data ──────────────────────────────────
+        document.getElementById('editLessonModal').addEventListener('show.bs.modal', function (e) {
+            const btn  = e.relatedTarget;
+            const type = btn.getAttribute('data-lesson-type');
+
+            document.getElementById('editLessonId').value          = btn.getAttribute('data-lesson-id');
+            document.getElementById('editLessonCourseId').value    = btn.getAttribute('data-course-id');
+            document.getElementById('editLessonTitle').value       = btn.getAttribute('data-lesson-title');
+            document.getElementById('editLessonType').value        = type;
+            document.getElementById('editLessonDuration').value    = btn.getAttribute('data-lesson-duration');
+            document.getElementById('editLessonVideoUrl').value    = btn.getAttribute('data-lesson-url');
+            document.getElementById('editLessonTextContent').value = btn.getAttribute('data-lesson-text');
+            document.getElementById('editLessonOrder').value       = btn.getAttribute('data-lesson-order');
+            document.getElementById('editLessonPreview').checked   = btn.getAttribute('data-lesson-preview') === 'true';
+
+            toggleEditContentFields();
+        });
+
+        // ── Toggle Video / Text fields in Edit Lesson modal ───────────────────
+        function toggleEditContentFields() {
+            const type       = document.getElementById('editLessonType').value;
+            const videoField = document.getElementById('editVideoUrlField');
+            const textField  = document.getElementById('editTextContentField');
+            const videoInput = document.getElementById('editLessonVideoUrl');
+
+            if (type === "0") {
+                videoField.classList.remove('d-none');
+                textField.classList.add('d-none');
+                videoInput.setAttribute('required', 'required');
+            } else {
+                videoField.classList.add('d-none');
+                textField.classList.remove('d-none');
+                videoInput.removeAttribute('required');
+            }
+        }
+    </script>
+}

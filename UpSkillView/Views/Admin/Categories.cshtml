@@ -1,158 +1,262 @@
-﻿@{
+@model List<Application.Courses.DTOs.Category.CategoryResponseDto>
+@{
     ViewData["Title"] = "Manage Categories";
     Layout = "_DashboardLayout";
+    var categories = Model ?? new List<Application.Courses.DTOs.Category.CategoryResponseDto>();
 }
 
-<div class="dashboard-main flex-grow-1 p-4 w-100">
-            
-            <nav aria-label="breadcrumb" class="mb-3">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="admin-dashboard.html" class="text-decoration-none">Admin Panel</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Categories</li>
-                </ol>
-            </nav>
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a asp-controller="Admin" asp-action="Dashboard" class="text-decoration-none">Admin Panel</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">Categories</li>
+    </ol>
+</nav>
 
-            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-3">
-                <div>
-                    <h2 class="mb-1">Category Management</h2>
-                    <p class="text-muted mb-0">Organize your platform's course catalog.</p>
-                </div>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
-                    <i class="bi bi-plus-lg me-1"></i> Add Category
-                </button>
-            </div>
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-3">
+    <div>
+        <h2 class="mb-1">Category Management</h2>
+        <p class="text-muted mb-0">
+            Organize your platform's course catalog.
+            <span class="badge bg-secondary-soft ms-1">@categories.Count total</span>
+            <span class="badge bg-success-soft text-success ms-1">@categories.Count(c => c.IsActive) active</span>
+        </p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+        <i class="bi bi-plus-lg me-1"></i> Add Category
+    </button>
+</div>
 
-            <!-- Categories List -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-bottom pt-4 pb-3 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">All Categories</h5>
-                    <div class="input-group" style="width: 250px;">
-                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" class="form-control border-start-0 ps-0" placeholder="Search categories...">
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-custom mb-0 table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="ps-4" style="width: 40px;">#</th>
-                                    <th>Category Name</th>
-                                    <th>Icon</th>
-                                    <th>Status</th>
-                                    <th>Course Count</th>
-                                    <th class="text-end pe-4">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="ps-4">1</td>
-                                    <td class="fw-medium">Development</td>
-                                    <td><i class="bi bi-code-slash text-primary fs-5"></i></td>
-                                    <td><span class="badge bg-success-soft">Active</span></td>
-                                    <td class="text-secondary">420</td>
-                                    <td class="text-end pe-4">
-                                        <button class="btn btn-sm btn-outline-secondary me-1"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-outline-danger btn-delete-confirm"><i class="bi bi-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="ps-4">2</td>
-                                    <td class="fw-medium">Business</td>
-                                    <td><i class="bi bi-briefcase text-primary fs-5"></i></td>
-                                    <td><span class="badge bg-success-soft">Active</span></td>
-                                    <td class="text-secondary">215</td>
-                                    <td class="text-end pe-4">
-                                        <button class="btn btn-sm btn-outline-secondary me-1"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-outline-danger btn-delete-confirm"><i class="bi bi-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="ps-4">3</td>
-                                    <td class="fw-medium">Design</td>
-                                    <td><i class="bi bi-palette text-primary fs-5"></i></td>
-                                    <td><span class="badge bg-success-soft">Active</span></td>
-                                    <td class="text-secondary">180</td>
-                                    <td class="text-end pe-4">
-                                        <button class="btn btn-sm btn-outline-secondary me-1"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-outline-danger btn-delete-confirm"><i class="bi bi-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="ps-4">4</td>
-                                    <td class="fw-medium">Marketing</td>
-                                    <td><i class="bi bi-megaphone text-primary fs-5"></i></td>
-                                    <td><span class="badge bg-success-soft">Active</span></td>
-                                    <td class="text-secondary">150</td>
-                                    <td class="text-end pe-4">
-                                        <button class="btn btn-sm btn-outline-secondary me-1"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-outline-danger btn-delete-confirm"><i class="bi bi-trash"></i></button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="ps-4">5</td>
-                                    <td class="fw-medium">Music</td>
-                                    <td><i class="bi bi-music-note-beamed text-muted fs-5"></i></td>
-                                    <td><span class="badge bg-secondary text-white">Inactive</span></td>
-                                    <td class="text-secondary">0</td>
-                                    <td class="text-end pe-4">
-                                        <button class="btn btn-sm btn-outline-secondary me-1"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-outline-danger btn-delete-confirm"><i class="bi bi-trash"></i></button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="card-footer bg-white border-top py-3 d-flex justify-content-between align-items-center">
-                    <span class="text-muted small">Showing 1 to 5 of 12 entries</span>
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination pagination-sm mb-0">
-                            <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
-                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                            <li class="page-item"><a class="page-link" href="#">2</a></li>
-                            <li class="page-item"><a class="page-link" href="#">3</a></li>
-                            <li class="page-item"><a class="page-link" href="#">Next</a></li>
-                        </ul>
-                    </nav>
-                </div>
-            </div>
+<!-- Alerts -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show d-flex align-items-center mb-4" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+    </div>
+}
 
+<!-- Categories Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-bottom pt-4 pb-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">All Categories</h5>
+        <div class="input-group" style="width:260px;">
+            <span class="input-group-text bg-white border-end-0">
+                <i class="bi bi-search text-muted"></i>
+            </span>
+            <input type="text" id="categorySearch" class="form-control border-start-0 ps-0"
+                   placeholder="Search categories..." oninput="filterTable()" />
         </div>
     </div>
 
-    <!-- Add Category Modal -->
-    <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header border-bottom-0 pb-0">
-                    <h5 class="modal-title fw-bold" id="addCategoryModalLabel">Add New Category</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body pt-4">
-                    <form>
-                        <div class="mb-3">
-                            <label for="categoryName" class="form-label">Category Name</label>
-                            <input type="text" class="form-control" id="categoryName" placeholder="e.g. Photography">
-                        </div>
-                        <div class="mb-3">
-                            <label for="categoryIcon" class="form-label">Icon (Bootstrap Icon Class)</label>
-                            <input type="text" class="form-control" id="categoryIcon" placeholder="e.g. bi-camera">
-                            <div class="form-text">Find icons at <a href="https://icons.getbootstrap.com/" target="_blank">icons.getbootstrap.com</a></div>
-                        </div>
-                        <div class="mb-4">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" id="categoryActive" checked>
-                                <label class="form-check-label" for="categoryActive">Active Status</label>
-                            </div>
-                        </div>
-                        <div class="d-grid gap-2">
-                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Save Category</button>
-                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                        </div>
-                    </form>
-                </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="categoriesTable">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4" style="width:50px;">#</th>
+                        <th>Category Name</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (categories.Any())
+                    {
+                        @for (int i = 0; i < categories.Count; i++)
+                        {
+                            var cat = categories[i];
+                            <tr>
+                                <td class="ps-4 text-muted">@(i + 1)</td>
+                                <td class="fw-semibold">@cat.Name</td>
+                                <td class="text-muted small" style="max-width:280px;">
+                                    @(string.IsNullOrEmpty(cat.Description) ? "—" : cat.Description)
+                                </td>
+                                <td>
+                                    @if (cat.IsActive)
+                                    {
+                                        <span class="badge bg-success-soft text-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary-soft text-muted">Inactive</span>
+                                    }
+                                </td>
+                                <td class="text-muted small">@cat.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                <td class="text-end pe-4">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <!-- Edit -->
+                                        <button class="btn btn-sm btn-outline-secondary"
+                                                title="Edit Category"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editCategoryModal"
+                                                data-cat-id="@cat.Id"
+                                                data-cat-name="@cat.Name"
+                                                data-cat-description="@(cat.Description ?? "")"
+                                                data-cat-active="@cat.IsActive.ToString().ToLower()">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+
+                                        <!-- Delete -->
+                                        <form asp-action="DeleteCategory" method="post"
+                                              onsubmit="return confirm('Delete category &quot;@Html.Raw(cat.Name)&quot;? This cannot be undone.')">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@cat.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Category">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-tags fs-2 d-block mb-2"></i>
+                                No categories found. Add your first category above.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (categories.Any())
+    {
+        <div class="card-footer bg-white border-top py-3">
+            <span class="text-muted small">Showing @categories.Count entr@(categories.Count != 1 ? "ies" : "y")</span>
+        </div>
+    }
+</div>
+
+<!-- ==========================================
+     MODALS
+     ========================================== -->
+
+<!-- Add Category Modal -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1"
+     aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="addCategoryModalLabel">
+                    <i class="bi bi-plus-circle me-2 text-primary"></i>Add New Category
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-        </di
+            <form asp-action="CreateCategory" method="post" id="addCategoryForm">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="newCategoryName" class="form-label">
+                            Category Name <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="name" id="newCategoryName" class="form-control"
+                               placeholder="e.g. Photography" maxlength="100" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="newCategoryDescription" class="form-label">Description</label>
+                        <textarea name="description" id="newCategoryDescription" class="form-control"
+                                  rows="3" maxlength="500"
+                                  placeholder="Brief description of this category..."></textarea>
+                        <div class="form-text">Max 500 characters. Optional.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-plus-lg me-1"></i> Save Category
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
+<!-- Edit Category Modal -->
+<div class="modal fade" id="editCategoryModal" tabindex="-1"
+     aria-labelledby="editCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="editCategoryModalLabel">
+                    <i class="bi bi-pencil-square me-2 text-warning"></i>Edit Category
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="EditCategory" method="post" id="editCategoryForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="editCategoryId" value="" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editCategoryName" class="form-label">
+                            Category Name <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="name" id="editCategoryName" class="form-control"
+                               maxlength="100" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCategoryDescription" class="form-label">Description</label>
+                        <textarea name="description" id="editCategoryDescription" class="form-control"
+                                  rows="3" maxlength="500"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch"
+                                   name="isActive" id="editCategoryActive" value="true" />
+                            <label class="form-check-label fw-medium" for="editCategoryActive">
+                                Active (visible to instructors)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning text-white">
+                        <i class="bi bi-save me-1"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
+@section Scripts {
+    <script>
+        // ── Populate Edit Modal with category data ────────────────────────────
+        document.getElementById('editCategoryModal').addEventListener('show.bs.modal', function (e) {
+            const btn = e.relatedTarget;
+            document.getElementById('editCategoryId').value          = btn.getAttribute('data-cat-id');
+            document.getElementById('editCategoryName').value        = btn.getAttribute('data-cat-name');
+            document.getElementById('editCategoryDescription').value = btn.getAttribute('data-cat-description');
+            document.getElementById('editCategoryActive').checked    = btn.getAttribute('data-cat-active') === 'true';
+        });
+
+        // ── Reset Add form on modal close ─────────────────────────────────────
+        document.getElementById('addCategoryModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('addCategoryForm').reset();
+        });
+
+        // ── Client-side search filter ─────────────────────────────────────────
+        function filterTable() {
+            const query = document.getElementById('categorySearch').value.toLowerCase();
+            document.querySelectorAll('#categoriesTable tbody tr').forEach(row => {
+                row.style.display = row.textContent.toLowerCase().includes(query) ? '' : 'none';
+            });
+        }
+    </script>
+}

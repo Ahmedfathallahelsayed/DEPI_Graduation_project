@@ -6,7 +6,7 @@
     var categories = ViewBag.Categories as List<CategoryResponseDto> ?? new List<CategoryResponseDto>();
 }
 
-<form asp-action="EditCourse" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+<form asp-action="EditCourse" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" id="editCourseForm">
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="Id" />
     <input type="hidden" asp-for="ExistingThumbnailUrl" />
@@ -20,13 +20,13 @@
         </ol>
     </nav>
 
-    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-3">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-3 gap-3">
         <div>
             <h2 class="mb-1">Edit Course</h2>
-            <p class="text-muted mb-0">Update the details for <strong>@Model.CourseTitle</strong>.</p>
+            <p class="text-muted mb-0">Updating: <strong>@Model.CourseTitle</strong></p>
         </div>
         <div class="d-flex gap-2">
-            <a asp-action="MyCourses" class="btn btn-outline-secondary">
+            <a asp-action="MyCourses" class="btn btn-outline-secondary" id="cancelBtn">
                 <i class="bi bi-x-lg me-1"></i> Cancel
             </a>
             <button type="submit" class="btn btn-primary">
@@ -35,11 +35,28 @@
         </div>
     </div>
 
+    @* Draft reset warning — always visible at the top *@
+    <div class="alert alert-warning d-flex align-items-start mb-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2 mt-1 flex-shrink-0"></i>
+        <small>
+            <strong>Heads up:</strong> Saving any changes will reset this course's status back to
+            <strong>Draft</strong> and it will need to be re-submitted for admin review before going live again.
+        </small>
+    </div>
+
     @if (!ViewData.ModelState.IsValid)
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="bi bi-exclamation-triangle me-2"></i>
             <div asp-validation-summary="ModelOnly"></div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
@@ -121,10 +138,7 @@
                                 <option value="">— Select a category —</option>
                                 @foreach (var cat in categories)
                                 {
-                                    <option value="@cat.Id"
-                                            selected="@(cat.Id == Model.CategoryId ? "selected" : null)">
-                                        @cat.Name
-                                    </option>
+                                    <option value="@cat.Id">@cat.Name</option>
                                 }
                             </select>
                             <span asp-validation-for="CategoryId" class="text-danger small"></span>
@@ -134,10 +148,10 @@
                                 Level <span class="text-danger">*</span>
                             </label>
                             <select asp-for="Level" class="form-select">
-                                <option value="3" selected="@(Model.Level == 3 ? "selected" : null)">All Levels</option>
-                                <option value="0" selected="@(Model.Level == 0 ? "selected" : null)">Beginner</option>
-                                <option value="1" selected="@(Model.Level == 1 ? "selected" : null)">Intermediate</option>
-                                <option value="2" selected="@(Model.Level == 2 ? "selected" : null)">Advanced</option>
+                                <option value="3">All Levels</option>
+                                <option value="0">Beginner</option>
+                                <option value="1">Intermediate</option>
+                                <option value="2">Advanced</option>
                             </select>
                             <span asp-validation-for="Level" class="text-danger small"></span>
                         </div>
@@ -161,10 +175,10 @@
                                 Language <span class="text-danger">*</span>
                             </label>
                             <select asp-for="Language" class="form-select">
-                                <option value="English" selected="@(Model.Language == "English" ? "selected" : null)">English</option>
-                                <option value="Arabic"  selected="@(Model.Language == "Arabic"  ? "selected" : null)">Arabic</option>
-                                <option value="Spanish" selected="@(Model.Language == "Spanish" ? "selected" : null)">Spanish</option>
-                                <option value="French"  selected="@(Model.Language == "French"  ? "selected" : null)">French</option>
+                                <option value="English">English</option>
+                                <option value="Arabic">Arabic</option>
+                                <option value="Spanish">Spanish</option>
+                                <option value="French">French</option>
                             </select>
                             <span asp-validation-for="Language" class="text-danger small"></span>
                         </div>
@@ -174,47 +188,38 @@
 
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
-                    <h5 class="mb-4"><i class="bi bi-image me-2 text-primary"></i>Course Thumbnail</h5>
+                    <h5 class="mb-1"><i class="bi bi-image me-2 text-primary"></i>Course Thumbnail</h5>
+                    <p class="text-muted small mb-4">Leave blank to keep the existing image.</p>
 
                     <div class="row align-items-center mb-4">
                         <div class="col-md-4 mb-3 mb-md-0">
-                            <div class="rounded overflow-hidden" style="height:180px; border:2px dashed var(--border-color);">
+                            <div class="rounded overflow-hidden position-relative"
+                                 style="height:180px; border:2px dashed var(--border-color);" id="previewBox">
                                 @if (!string.IsNullOrEmpty(Model.ExistingThumbnailUrl))
                                 {
                                     <img id="previewImg" src="@Model.ExistingThumbnailUrl"
                                          alt="Current Thumbnail"
-                                         style="width:100%; height:100%; object-fit:cover;" />
+                                         style="width:100%; height:100%; object-fit:cover;"
+                                         onerror="this.style.display='none'; document.getElementById('previewFallback').style.display='flex'" />
                                 }
-                                else
-                                {
-                                    <div class="d-flex align-items-center justify-content-center text-muted h-100">
-                                        <div class="text-center">
-                                            <i class="bi bi-image fs-1 d-block mb-2"></i>
-                                            <span class="small">No image yet</span>
-                                        </div>
+                                <div id="previewFallback"
+                                     class="d-@(string.IsNullOrEmpty(Model.ExistingThumbnailUrl) ? "flex" : "none") align-items-center justify-content-center text-muted h-100">
+                                    <div class="text-center">
+                                        <i class="bi bi-image fs-1 d-block mb-2"></i>
+                                        <span class="small">No image yet</span>
                                     </div>
-                                }
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-8">
-                            <p class="text-muted small mb-1">
-                                Upload a <strong>new</strong> thumbnail to replace the current one.
-                                Leave blank to keep the existing image.
-                            </p>
                             <p class="text-muted small mb-2">
-                                Recommended: <strong>750×422px</strong> · jpg, jpeg, gif, png
+                                Recommended size: <strong>750×422px</strong><br />
+                                Accepted: JPG, PNG, GIF, WebP &middot; Max: <strong>5MB</strong>
                             </p>
                             <input asp-for="CourseImage" type="file" class="form-control"
                                    accept="image/*" id="thumbnailInput" />
+                            <span class="text-muted small mt-1 d-block" id="fileInfo"></span>
                         </div>
-                    </div>
-
-                    <div class="alert alert-warning d-flex align-items-center" role="alert">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <small>
-                            Saving changes will reset this course's status back to <strong>Draft</strong>
-                            and it will need to be re-submitted for admin review.
-                        </small>
                     </div>
 
                     <div class="d-flex justify-content-between mt-3">
@@ -236,27 +241,61 @@
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
     <script>
-        // Live thumbnail preview on file selection
+        // Live thumbnail preview + file validation
         document.getElementById('thumbnailInput').addEventListener('change', function (e) {
             const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function (ev) {
-                    let img = document.getElementById('previewImg');
-                    if (!img) {
-                        // No existing image — create one
-                        img = document.createElement('img');
-                        img.id = 'previewImg';
-                        img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
-                        const container = document.querySelector('#thumbnailInput').closest('.row')
-                                            .querySelector('.rounded');
-                        container.innerHTML = '';
-                        container.appendChild(img);
-                    }
-                    img.src = ev.target.result;
-                };
-                reader.readAsDataURL(file);
+            const maxSizeMB = 5;
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+
+            if (!file) return;
+
+            // Validate type
+            if (!allowedTypes.includes(file.type)) {
+                alert('Invalid file type. Please upload a JPG, PNG, GIF, or WebP image.');
+                this.value = '';
+                return;
             }
+
+            // Validate size
+            if (file.size > maxSizeMB * 1024 * 1024) {
+                alert(`File is too large. Maximum allowed size is ${maxSizeMB}MB. Your file is ${(file.size / 1024 / 1024).toFixed(1)}MB.`);
+                this.value = '';
+                return;
+            }
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function (ev) {
+                let img = document.getElementById('previewImg');
+                const fallback = document.getElementById('previewFallback');
+
+                if (!img) {
+                    img = document.createElement('img');
+                    img.id = 'previewImg';
+                    img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+                    document.getElementById('previewBox').prepend(img);
+                }
+
+                img.src = ev.target.result;
+                img.style.display = 'block';
+                if (fallback) fallback.style.display = 'none';
+
+                document.getElementById('fileInfo').textContent =
+                    `${file.name} (${(file.size / 1024).toFixed(0)} KB)`;
+            };
+            reader.readAsDataURL(file);
         });
+
+        // Unsaved changes warning
+        let formDirty = false;
+        document.querySelectorAll('input:not([type=hidden]), textarea, select').forEach(el => {
+            el.addEventListener('change', () => formDirty = true);
+        });
+        window.addEventListener('beforeunload', (e) => {
+            if (formDirty) { e.preventDefault(); e.returnValue = ''; }
+        });
+        // Cancel button and form submit should not trigger the warning
+        document.getElementById('cancelBtn').addEventListener('click', () => formDirty = false);
+        document.getElementById('editCourseForm').addEventListener('submit', () => formDirty = false);
     </script>
 }

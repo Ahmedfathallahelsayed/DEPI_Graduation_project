@@ -22,6 +22,7 @@ namespace Application.Courses.DTOs.Course
         public string CategoryName { get; set; }
         public string InstructorName { get; set; }
         public int EnrollmentCount { get; set; }
+        public int SectionCount { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }
