@@ -1,4 +1,4 @@
-﻿using Infrastructure.Persistance.DbContext;
+using Infrastructure.Persistance.DbContext;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ namespace Infrastructure.Repos.Common
 {
     public class Repo<T> : IRepo<T> where T : class
     {
-        private readonly AppDBContext dbContext;
+        protected readonly AppDBContext dbContext;
 
         public Repo(AppDBContext dbContext)
         {

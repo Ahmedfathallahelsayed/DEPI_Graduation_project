@@ -1,4 +1,4 @@
-﻿using Application.Common;
+using Application.Common;
 using Application.Identity;
 using Infrastructure.Persistance;
 using Microsoft.AspNetCore.Identity;
@@ -82,6 +82,12 @@ namespace Infrastructure.Services.Identity
             var roles = await UserManager.GetRolesAsync(user);
 
             return roles.ToList();
+        }
+
+        public async Task<string> GetUserFullNameAsync(string userId)
+        {
+            var user = await UserManager.FindByIdAsync(userId);
+            return user?.FullName ?? "Unknown";
         }
     }
 }
