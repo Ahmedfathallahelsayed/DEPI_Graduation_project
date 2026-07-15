@@ -15,7 +15,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="mb-1">Instructor Dashboard</h2>
-        <p class="text-muted mb-0">Welcome back, <strong>@(User.Identity?.Name ?? "Instructor")</strong>! Here's an overview of your teaching.</p>
+        <p class="text-muted mb-0">Welcome back, <strong>@(User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value?.Split('@')[0] ?? "Instructor")</strong>! Here's an overview of your teaching.</p>
     </div>
     <a asp-action="MyCourses" class="btn btn-outline-primary d-none d-sm-flex align-items-center gap-2">
         <i class="bi bi-journal-code"></i> Manage Courses
