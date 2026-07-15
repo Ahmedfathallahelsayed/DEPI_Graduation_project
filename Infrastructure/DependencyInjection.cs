@@ -1,9 +1,17 @@
-﻿using Application.Identity;
+using Application.Account.Interface;
+using Application.Courses.Interfaces;
+using Application.Identity;
 using Application.JWT;
 using Infrastructure.Persistance;
 using Infrastructure.Persistance.DbContext;
+using Infrastructure.Repo.Contracts;
+using Infrastructure.Repo.Implementation;
+using Infrastructure.Service.Account;
+using Infrastructure.Service.Courses;
+using Infrastructure.Service.FileService;
 using Infrastructure.Services.Identity;
 using Infrastructure.Services.JWT;
+using Infrastructure.UnitOfWork;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +24,8 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Application.Admin.Interfaces;
+using Infrastructure.Service.Admin;
 
 namespace Infrastructure
 {
@@ -23,6 +33,14 @@ namespace Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
+            // Add DbContext Connection
+            services.AddDbContext<AppDBContext>(options =>
+                options.UseSqlServer(configuration.GetConnectionString("ConnectDBS")));
+
+            // Adding Identity (must come before AddAuthentication to allow JWT to override default cookie schemes)
+            services.AddIdentity<AppUser, IdentityRole>()
+                    .AddEntityFrameworkStores<AppDBContext>()
+                    .AddDefaultTokenProviders();
 
             // Add JWT Authentication
             var jwtSettings = configuration.GetSection("Jwt");
@@ -31,6 +49,7 @@ namespace Infrastructure
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             })
             .AddJwtBearer(options =>
             {
@@ -49,22 +68,69 @@ namespace Infrastructure
 
                     RoleClaimType = ClaimTypes.Role
                 };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        Console.WriteLine("AUTH FAILED:");
+                        Console.WriteLine(context.Exception);
+                        return Task.CompletedTask;
+                    },
+
+                    OnTokenValidated = context =>
+                    {
+                        Console.WriteLine("TOKEN VALIDATED");
+                        return Task.CompletedTask;
+                    },
+
+                    OnChallenge = context =>
+                    {
+                        Console.WriteLine("AUTH CHALLENGE");
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
-            // Add DbContext Connection
-            services.AddDbContext<AppDBContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+            // Registering Repos contracts
+            services.AddScoped<ICategory, CategoryRepo>();
+            services.AddScoped<ICertificate, CertificateRepo>();
+            services.AddScoped<ICourse, CourseRepo>();
+            services.AddScoped<ICourseSection, CourseSectionRepo>();
+            services.AddScoped<IEnrollment, EnrollmentRepo>();
+            services.AddScoped<ILesson, LessonRepo>();
+            services.AddScoped<ILessonProgress, LessonProgressRepo>();
+            services.AddScoped<IOrder, OrderRepo>();
+            services.AddScoped<IOrderItem, OrderItemRepo>();
 
-            // Adding Identity
-            services.AddIdentity<AppUser, IdentityRole>()
-                    .AddEntityFrameworkStores<AppDBContext>()
-                    .AddDefaultTokenProviders();
+            // Registering Unit of Work
+            services.AddScoped<IUnitOfWork, UnitOfWork.UnitOfWork>();
+
 
             // Registering Services in DI
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
 
+            // Account Service
+            services.AddScoped<IAccountService, AccountService>();
+
+            // Course Module Services (Team Member 2)
+            services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<ICourseService, CourseService>();
+            services.AddScoped<ICourseSectionService, CourseSectionService>();
+            services.AddScoped<ILessonService, LessonService>();
+            services.AddScoped<IStudentFlowService, StudentFlowService>();
+
+            // Admin Module Services (Team Member 5)
+            services.AddScoped<IAdminService, AdminService>();
+
+            // Course Content Module Services (Team Member 3)
+            services.AddScoped<Application.CourseContent.Interfaces.ICourseContentService,
+                Infrastructure.Service.CourseContent.CourseContentService>();
+
+            services.AddScoped<Application.CourseContent.Interfaces.IStudentLearningService,
+                Infrastructure.Service.CourseContent.StudentLearningService>();
 
 
             return services;

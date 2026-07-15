@@ -48,6 +48,9 @@ namespace UpSkill
                         new string[] {}
                     }
                 });
+
+                // Resolve conflicting DTO class names by using their fully qualified names as schema IDs
+                options.CustomSchemaIds(type => type.FullName);
             });
 
             // CORS By app settings
@@ -79,10 +82,29 @@ namespace UpSkill
             app.UseCors("Clients");
             app.UseHttpsRedirection();
 
+            // Required for serving thumbnail images from wwwroot/thumbnails/
+            app.UseStaticFiles();
+
+            // MUST come before UseAuthorization — validates JWT tokens
+            app.UseAuthentication();
             app.UseAuthorization();
 
-
             app.MapControllers();
+
+            // Seed database at startup
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    AppDbContextSeed.SeedAsync(services).Wait();
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "An error occurred seeding the DB.");
+                }
+            }
 
             app.Run();
         }

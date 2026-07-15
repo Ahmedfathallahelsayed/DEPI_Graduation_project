@@ -1,0 +1,150 @@
+@model Application.Admin.DTOs.DashboardStatsDto
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "_DashboardLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Admin Dashboard</h2>
+        <p class="text-muted mb-0">System overview and key metrics.</p>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="row g-4 mb-4">
+    <!-- Total Users -->
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h6 class="text-muted mb-0">Total Users</h6>
+                    <div class="p-2 bg-primary-soft rounded text-primary">
+                        <i class="bi bi-people"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-0">@Model.TotalUsers</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Students -->
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h6 class="text-muted mb-0">Students</h6>
+                    <div class="p-2 bg-success-soft rounded text-success">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-0">@Model.TotalStudents</h3>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Total Instructors -->
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h6 class="text-muted mb-0">Instructors</h6>
+                    <div class="p-2 bg-info-soft rounded text-info">
+                        <i class="bi bi-person-badge"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-0">@Model.TotalInstructors</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Admins -->
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h6 class="text-muted mb-0">Administrators</h6>
+                    <div class="p-2 bg-danger-soft rounded text-danger">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-0">@Model.TotalAdmins</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Total Courses -->
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h6 class="text-muted mb-0">Total Courses</h6>
+                    <div class="p-2 bg-primary-soft rounded text-primary">
+                        <i class="bi bi-journal-check"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-0">@Model.TotalCourses</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Courses -->
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h6 class="text-muted mb-0">Pending Approval</h6>
+                    <div class="p-2 bg-warning-soft rounded text-warning">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-0">@Model.PendingCoursesCount</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Published Courses -->
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h6 class="text-muted mb-0">Published Courses</h6>
+                    <div class="p-2 bg-success-soft rounded text-success">
+                        <i class="bi bi-journal-bookmark-fill"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-0">@Model.PublishedCoursesCount</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Revenue -->
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h6 class="text-muted mb-0">Total Revenue</h6>
+                    <div class="p-2 bg-info-soft rounded text-info">
+                        <i class="bi bi-currency-dollar"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-0">$@Model.TotalRevenue.ToString("N2")</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Courses Preview -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold">Recent Pending Courses</h5>
+        <a asp-action="Courses" class="btn btn-sm btn-outline-primary">View All</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="text-center p-4">
+            <p class="text-muted mb-0">Check the Courses tab to review pending courses.</p>
+        </div>
+    </div>
+</div>

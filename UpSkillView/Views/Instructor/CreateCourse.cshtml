@@ -1,0 +1,250 @@
+@model UpSkillView.Models.Instructor.CreateCourseViewModel
+@using Application.Courses.DTOs.Category
+@{
+    ViewData["Title"] = "Create Course";
+    Layout = "_DashboardLayout";
+    var categories = ViewBag.Categories as List<CategoryResponseDto> ?? new List<CategoryResponseDto>();
+}
+
+<form asp-action="CreateCourse" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-controller="Instructor" asp-action="MyCourses" class="text-decoration-none">My Courses</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Create New Course</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-3">
+        <div>
+            <h2 class="mb-1">Create New Course</h2>
+            <p class="text-muted mb-0">Fill in the details to publish your course.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg me-1"></i> Save Course
+            </button>
+        </div>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" style="display:@(ViewData.ModelState.IsValid ? "none" : "block")"></div>
+
+    <!-- Wizard Tabs -->
+    <ul class="nav nav-pills mb-4 bg-white p-2 rounded shadow-sm border" id="courseCreationTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="basic-tab" data-bs-toggle="pill" data-bs-target="#basic"
+                    type="button" role="tab" aria-selected="true">
+                <i class="bi bi-1-circle me-1"></i> Basic Info
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="details-tab" data-bs-toggle="pill" data-bs-target="#details"
+                    type="button" role="tab" aria-selected="false">
+                <i class="bi bi-2-circle me-1"></i> Details &amp; Media
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="courseCreationTabsContent">
+
+        <!-- ── Step 1: Basic Info ───────────────────────────────────────── -->
+        <div class="tab-pane fade show active" id="basic" role="tabpanel">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="mb-4"><i class="bi bi-info-circle me-2 text-primary"></i>Course Landing Page</h5>
+
+                    <div class="mb-4">
+                        <label asp-for="CourseTitle" class="form-label">Course Title <span class="text-danger">*</span></label>
+                        <input asp-for="CourseTitle" class="form-control" placeholder="e.g. Learn Python from Scratch" />
+                        <span asp-validation-for="CourseTitle" class="text-danger small"></span>
+                        <div class="form-text">A catchy title helps students find your course.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="CourseSubtitle" class="form-label">Course Subtitle <span class="text-danger">*</span></label>
+                        <input asp-for="CourseSubtitle" class="form-control" placeholder="e.g. Master Python 3 and build 10 real-world projects" />
+                        <span asp-validation-for="CourseSubtitle" class="text-danger small"></span>
+                        <div class="form-text">A brief summary shown beneath the title.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="CourseDescription" class="form-label">Course Description <span class="text-danger">*</span></label>
+                        <textarea asp-for="CourseDescription" class="form-control" rows="6"
+                                  placeholder="Provide a detailed description of your course..."></textarea>
+                        <span asp-validation-for="CourseDescription" class="text-danger small"></span>
+                    </div>
+
+                    <div class="text-end mt-4">
+                        <button type="button" class="btn btn-primary"
+                                onclick="document.getElementById('details-tab').click()">
+                            Next: Details &amp; Media <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Step 2: Details & Media ─────────────────────────────────── -->
+        <div class="tab-pane fade" id="details" role="tabpanel">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h5 class="mb-4"><i class="bi bi-tags me-2 text-primary"></i>Category &amp; Pricing</h5>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="CategoryId" class="form-label">Category <span class="text-danger">*</span></label>
+                            <select asp-for="CategoryId" class="form-select">
+                                <option value="">— Select a category —</option>
+                                @foreach (var cat in categories)
+                                {
+                                    <option value="@cat.Id">@cat.Name</option>
+                                }
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="Level" class="form-label">Level <span class="text-danger">*</span></label>
+                            <select asp-for="Level" class="form-select">
+                                <option value="">— Select level —</option>
+                                <option value="3">All Levels</option>
+                                <option value="0">Beginner</option>
+                                <option value="1">Intermediate</option>
+                                <option value="2">Advanced</option>
+                            </select>
+                            <span asp-validation-for="Level" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="Price" class="form-label">Price (USD) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="Price" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" />
+                            </div>
+                            <span asp-validation-for="Price" class="text-danger small"></span>
+                            <div class="form-text">Set to 0 to make the course free.</div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label asp-for="Language" class="form-label">Language <span class="text-danger">*</span></label>
+                            <select asp-for="Language" class="form-select">
+                                <option value="English">English</option>
+                                <option value="Arabic">Arabic</option>
+                                <option value="Spanish">Spanish</option>
+                                <option value="French">French</option>
+                            </select>
+                            <span asp-validation-for="Language" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="mb-4">
+                        <i class="bi bi-image me-2 text-primary"></i>Course Thumbnail
+                        <span class="badge bg-secondary-soft text-muted ms-2 small fw-normal">Optional</span>
+                    </h5>
+
+                    <div class="row align-items-center mb-4">
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center text-muted"
+                                 style="height: 180px; border: 2px dashed var(--border-color);" id="previewBox">
+                                <div class="text-center" id="previewPlaceholder">
+                                    <i class="bi bi-image fs-1 d-block mb-2"></i>
+                                    <span class="small">No image selected</span>
+                                </div>
+                                <img id="previewImg" src="#" alt="Preview"
+                                     style="display:none; width:100%; height:100%; object-fit:cover; border-radius: 8px;" />
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <p class="text-muted small mb-2">
+                                Upload your course thumbnail image. Recommended size: <strong>750×422px</strong>.<br/>
+                                Accepted formats: JPG, PNG, GIF, WebP. Max size: <strong>5MB</strong>.
+                            </p>
+                            <input asp-for="CourseImage" type="file" class="form-control"
+                                   accept="image/*" id="thumbnailInput" />
+                            <span class="text-muted small mt-1 d-block" id="fileInfo"></span>
+                            <span asp-validation-for="CourseImage" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-outline-secondary"
+                                onclick="document.getElementById('basic-tab').click()">
+                            <i class="bi bi-arrow-left me-1"></i> Previous
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-lg me-1"></i> Save Course
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</form>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+        // Live thumbnail preview + file validation
+        document.getElementById('thumbnailInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            const maxSizeMB = 5;
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+
+            if (!file) return;
+
+            // Validate file type
+            if (!allowedTypes.includes(file.type)) {
+                alert('Invalid file type. Please upload a JPG, PNG, GIF, or WebP image.');
+                this.value = '';
+                return;
+            }
+
+            // Validate file size (max 5MB)
+            if (file.size > maxSizeMB * 1024 * 1024) {
+                alert(`File is too large. Maximum allowed size is ${maxSizeMB}MB. Your file is ${(file.size / 1024 / 1024).toFixed(1)}MB.`);
+                this.value = '';
+                return;
+            }
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function (ev) {
+                document.getElementById('previewImg').src = ev.target.result;
+                document.getElementById('previewImg').style.display = 'block';
+                document.getElementById('previewPlaceholder').style.display = 'none';
+                document.getElementById('fileInfo').textContent =
+                    `${file.name} (${(file.size / 1024).toFixed(0)} KB)`;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Warn user if they try to leave the page with unsaved changes
+        let formDirty = false;
+        document.querySelectorAll('input, textarea, select').forEach(el => {
+            el.addEventListener('change', () => formDirty = true);
+        });
+        window.addEventListener('beforeunload', (e) => {
+            if (formDirty) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+        document.querySelector('form').addEventListener('submit', () => formDirty = false);
+    </script>
+}

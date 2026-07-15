@@ -1,0 +1,223 @@
+@model UpSkillView.Models.CoursePlayerViewModel
+@{
+    ViewData["Title"] = Model.CourseTitle;
+}
+
+<div class="container-fluid bg-dark text-white p-3 d-flex justify-content-between align-items-center sticky-top">
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show m-3 position-absolute top-0 start-50 translate-middle-x z-index-master" style="z-index: 1050;" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show m-3 position-absolute top-0 start-50 translate-middle-x z-index-master" style="z-index: 1050;" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+    <div class="d-flex align-items-center">
+        <a asp-action="Dashboard" class="text-white text-decoration-none me-3"><i class="bi bi-arrow-left fs-4"></i></a>
+        <h5 class="mb-0 text-truncate" style="max-width: 300px;">@Model.CourseTitle</h5>
+    </div>
+    <div class="d-none d-md-flex align-items-center">
+        <span class="me-3 small text-white-50">Your Progress</span>
+        <div class="progress" style="width: 150px; height: 8px;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: @(Model.ProgressPercentage)%;" aria-valuenow="@(Model.ProgressPercentage)" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <span class="ms-2 small fw-bold">@(Model.ProgressPercentage)%</span>
+        @if (Model.ProgressPercentage == 100)
+        {
+            <a asp-action="ViewCertificate" asp-route-enrollmentId="@Model.EnrollmentId" target="_blank" class="btn btn-sm btn-outline-warning ms-3">
+                <i class="bi bi-award me-1"></i> Get Certificate
+            </a>
+        }
+    </div>
+</div>
+
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <!-- Main Content Area -->
+        <div class="col-lg-9 d-flex flex-column" style="min-height: calc(100vh - 64px);">
+            <!-- Video Player -->
+            <div class="bg-black flex-grow-1 d-flex align-items-center justify-content-center position-relative w-100 h-100" id="videoContainer">
+                <div id="videoPlaceholder" class="w-100 h-100 d-flex flex-column align-items-center justify-content-center">
+                    <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Video Placeholder" class="img-fluid opacity-50 w-100 h-100" style="object-fit: cover; position: absolute; top:0; left:0;">
+                    <div class="position-relative text-center" style="z-index: 10;">
+                        <button id="videoPlaceholderPlayBtn" class="btn btn-primary rounded-circle p-3 mb-3 shadow" style="width: 80px; height: 80px;">
+                            <i class="bi bi-play-fill fs-1 ms-1"></i>
+                        </button>
+                        <h3 class="text-white drop-shadow">Select a lesson to begin</h3>
+                    </div>
+                </div>
+                <iframe id="mainVideoPlayer" class="w-100 h-100 d-none" style="position: absolute; top:0; left:0; border: none;" src="" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+            </div>
+        </div>
+
+        <!-- Sidebar Curriculum -->
+        <div class="col-lg-3 border-start bg-light" style="height: calc(100vh - 64px); overflow-y: auto;">
+            <div class="p-3 bg-white border-bottom sticky-top">
+                <h5 class="mb-0">Course Content</h5>
+            </div>
+            
+            <div class="accordion accordion-flush" id="courseCurriculum">
+                @if (Model.Sections != null && Model.Sections.Any())
+                {
+                    for (int i = 0; i < Model.Sections.Count; i++)
+                    {
+                        var sec = Model.Sections[i];
+                        <div class="accordion-item bg-transparent">
+                            <h2 class="accordion-header" id="heading@(i)">
+                                <button class="accordion-button @(i == 0 ? "" : "collapsed") bg-light fw-bold text-dark border-bottom" type="button" data-bs-toggle="collapse" data-bs-target="#collapse@(i)" aria-expanded="@(i == 0 ? "true" : "false")" aria-controls="collapse@(i)">
+                                    <div class="d-flex flex-column w-100">
+                                        <span>@sec.Title</span>
+                                        <span class="small fw-normal text-muted mt-1">
+                                            @(sec.Lessons?.Count(l => l.IsCompleted) ?? 0) / @(sec.Lessons?.Count ?? 0) | @(sec.Lessons?.Sum(l => l.DurationInMinutes) ?? 0) min
+                                        </span>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapse@(i)" class="accordion-collapse collapse @(i == 0 ? "show" : "")" aria-labelledby="heading@(i)" data-bs-parent="#courseCurriculum">
+                                <div class="accordion-body p-0">
+                                    <ul class="list-group list-group-flush">
+                                        @if (sec.Lessons != null)
+                                        {
+                                            foreach (var lesson in sec.Lessons)
+                                            {
+                                                <li class="list-group-item bg-transparent p-0">
+                                                    <div class="d-flex p-3 card-hover lesson-item" id="lesson-@lesson.Id" style="cursor: pointer;" onclick="playVideo('@lesson.VideoUrl', @lesson.Id)">
+                                                        <div class="me-3">
+                                                            @if (lesson.IsCompleted)
+                                                            {
+                                                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                                            }
+                                                            else
+                                                            {
+                                                                <form asp-action="MarkLessonComplete" method="post" style="display:inline;">
+                                                                    <input type="hidden" name="lessonId" value="@lesson.Id" />
+                                                                    <input type="hidden" name="courseId" value="@Model.CourseId" />
+                                                                    <button type="submit" class="btn btn-link p-0 text-muted m-0"><i class="bi bi-circle fs-5"></i></button>
+                                                                </form>
+                                                            }
+                                                        </div>
+                                                        <div>
+                                                            <p class="mb-1 fw-medium text-dark">@lesson.Title</p>
+                                                            <p class="mb-0 small text-muted"><i class="bi bi-play-circle me-1"></i> @lesson.DurationInMinutes min</p>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            }
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="p-4 text-center text-muted">
+                        No sections found.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add a small custom style to override body margin for the full-screen player -->
+@section Scripts {
+    <style>
+        body { padding-top: 0 !important; }
+        .bg-main { background-color: #fff !important; }
+        nav.navbar { display: none !important; }
+        footer { display: none !important; }
+        main { padding: 0 !important; }
+    </style>
+    <script>
+        var lessons = [
+            @if (Model.Sections != null)
+            {
+                foreach (var sec in Model.Sections)
+                {
+                    if (sec.Lessons != null)
+                    {
+                        foreach (var lesson in sec.Lessons)
+                        {
+                            <text>{ id: @lesson.Id, title: "@Html.Raw(lesson.Title.Replace("\"", "\\\""))", url: "@lesson.VideoUrl", isCompleted: @(lesson.IsCompleted ? "true" : "false") },</text>
+                        }
+                    }
+                }
+            }
+        ];
+
+        function getYouTubeEmbedUrl(url) {
+            if (!url) return '';
+            
+            // Match standard watch page or shared links
+            var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            var match = url.match(regExp);
+            
+            if (match && match[2].length == 11) {
+                var videoId = match[2];
+                return 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&rel=0';
+            }
+            
+            return url;
+        }
+
+        function playVideo(videoUrl, lessonId) {
+            if (!videoUrl) {
+                alert("This lesson does not have a video URL.");
+                return;
+            }
+            
+            var embedUrl = getYouTubeEmbedUrl(videoUrl);
+            
+            document.getElementById('videoPlaceholder').classList.add('d-none');
+            var iframe = document.getElementById('mainVideoPlayer');
+            iframe.src = embedUrl;
+            iframe.classList.remove('d-none');
+            
+            // Highlight the active lesson in the list
+            var lessonItems = document.querySelectorAll('.lesson-item');
+            lessonItems.forEach(function(el) {
+                el.classList.remove('bg-primary-soft', 'border-start', 'border-primary', 'border-4');
+                el.style.backgroundColor = 'transparent';
+            });
+            
+            if (lessonId) {
+                var activeEl = document.getElementById('lesson-' + lessonId);
+                if (activeEl) {
+                    activeEl.classList.add('bg-primary-soft', 'border-start', 'border-primary', 'border-4');
+                    activeEl.style.backgroundColor = 'rgba(13, 110, 253, 0.08)'; // Fallback soft styling
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (lessons.length > 0) {
+                // Find first incomplete lesson, or default to the first one
+                var firstLesson = lessons.find(function(l) { return !l.isCompleted; }) || lessons[0];
+                if (firstLesson && firstLesson.url) {
+                    // Play the video and highlight it on load
+                    playVideo(firstLesson.url, firstLesson.id);
+                }
+            }
+            
+            var playBtn = document.getElementById('videoPlaceholderPlayBtn');
+            if (playBtn) {
+                playBtn.addEventListener('click', function() {
+                    if (lessons.length > 0) {
+                        var firstLesson = lessons.find(function(l) { return !l.isCompleted; }) || lessons[0];
+                        if (firstLesson && firstLesson.url) {
+                            playVideo(firstLesson.url, firstLesson.id);
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}

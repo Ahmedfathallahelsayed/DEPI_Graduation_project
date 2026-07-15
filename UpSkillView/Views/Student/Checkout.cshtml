@@ -1,0 +1,114 @@
+@model Application.CourseContent.DTOs.StudentCourseDetailsDto
+@{
+    ViewData["Title"] = "Checkout";
+}
+
+<div class="container py-5" style="max-width: 900px;">
+    <h2 class="fw-bold mb-4">Checkout</h2>
+    <div class="row g-4">
+        <!-- Payment Form -->
+        <div class="col-md-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h4 class="mb-4">Payment Method</h4>
+                    <form id="checkoutForm">
+                        <div class="mb-3">
+                            <label class="form-label">Name on Card</label>
+                            <input type="text" class="form-control" placeholder="John Doe" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Card Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bi bi-credit-card text-muted"></i></span>
+                                <input type="text" class="form-control border-start-0" placeholder="0000 0000 0000 0000" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Expiry Date</label>
+                                <input type="text" class="form-control" placeholder="MM/YY" required>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">CVC/CVV</label>
+                                <input type="text" class="form-control" placeholder="123" required>
+                            </div>
+                        </div>
+                        <hr class="my-4">
+                        <h4 class="mb-3">Billing Address</h4>
+                        <div class="mb-3">
+                            <label class="form-label">Country</label>
+                            <select class="form-select" required>
+                                <option value="">Select country...</option>
+                                <option value="US">United States</option>
+                                <option value="EG">Egypt</option>
+                                <option value="SA">Saudi Arabia</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-md-5">
+            <div class="card border border-primary border-opacity-25 bg-light">
+                <div class="card-body p-4">
+                    <h4 class="mb-4">Order Summary</h4>
+                    <div class="d-flex mb-3">
+                        @if (!string.IsNullOrEmpty(Model.ThumbnailUrl))
+                        {
+                            <img src="@Model.ThumbnailUrl" alt="Course Thumbnail" class="rounded me-3" style="width: 80px; height: 60px; object-fit: cover;">
+                        }
+                        else
+                        {
+                            <div class="bg-secondary rounded me-3 d-flex align-items-center justify-content-center text-white" style="width: 80px; height: 60px;">
+                                <i class="bi bi-image"></i>
+                            </div>
+                        }
+                        <div>
+                            <h6 class="mb-1">@Model.Title</h6>
+                            <span class="text-muted small">@Model.InstructorSummary</span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-4">
+                        <h5 class="fw-bold">Total</h5>
+                        <h5 class="fw-bold text-primary">$@Model.Price.ToString("0.00")</h5>
+                    </div>
+                    <p class="small text-muted mb-4">By completing your purchase you agree to our Terms of Service.</p>
+                    
+                    <!-- Hidden form to actually submit Enrollment -->
+                    <form asp-controller="Student" asp-action="Enroll" method="post" id="enrollForm">
+                        <input type="hidden" name="courseId" value="@Model.CourseId" />
+                        <button type="submit" class="btn btn-primary btn-lg w-100" id="payButton">
+                            Complete Payment
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('enrollForm').addEventListener('submit', function(e) {
+            // Check if payment form is valid (basic mock check)
+            const checkoutForm = document.getElementById('checkoutForm');
+            if (!checkoutForm.checkValidity()) {
+                e.preventDefault();
+                e.stopPropagation();
+                checkoutForm.classList.add('was-validated');
+                return;
+            }
+
+            // Simulate payment processing
+            const btn = document.getElementById('payButton');
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing...';
+            btn.disabled = true;
+
+            // Optional: You can put a small delay here if you want to really mock it, 
+            // but for form submission, we just let it submit to the server naturally.
+        });
+    </script>
+}

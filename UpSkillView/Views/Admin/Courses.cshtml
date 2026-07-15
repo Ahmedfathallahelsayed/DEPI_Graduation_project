@@ -1,0 +1,102 @@
+@model List<Application.Courses.DTOs.Course.CourseResponseDto>
+@{
+    ViewData["Title"] = "Pending Courses";
+    Layout = "_DashboardLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-1">Pending Courses</h2>
+</div>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Course Title</th>
+                        <th>Instructor</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var course in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div>
+                                            <h6 class="mb-0 fw-bold">@course.Title</h6>
+                                            <small class="text-muted">$@course.Price.ToString("0.00")</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="text-muted">@course.InstructorName</span></td>
+                                <td>@course.CategoryName</td>
+                                <td><span class="badge bg-warning text-dark">Pending</span></td>
+                                <td class="text-end pe-4">
+                                    <form asp-action="Approve" method="post" class="d-inline-block me-1">
+                                        <input type="hidden" name="id" value="@course.Id" />
+                                        <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                    </form>
+                                    <button class="btn btn-sm btn-danger" onclick="rejectCourse(@course.Id)">Reject</button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">No pending courses found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function rejectCourse(courseId) {
+            const reason = prompt("Please enter the reason for rejection (minimum 5 characters):");
+            if (reason === null) return; // User cancelled
+            
+            if (reason.trim().length < 5) {
+                alert("Rejection reason must be at least 5 characters long.");
+                return;
+            }
+            
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("Reject", "Admin")';
+            
+            const idInput = document.createElement('input');
+            idInput.type = 'hidden';
+            idInput.name = 'id';
+            idInput.value = courseId;
+            form.appendChild(idInput);
+            
+            const reasonInput = document.createElement('input');
+            reasonInput.type = 'hidden';
+            reasonInput.name = 'reason';
+            reasonInput.value = reason;
+            form.appendChild(reasonInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+}

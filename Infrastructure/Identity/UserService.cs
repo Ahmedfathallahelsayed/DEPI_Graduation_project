@@ -1,4 +1,4 @@
-﻿using Application.Common;
+using Application.Common;
 using Application.Identity;
 using Infrastructure.Persistance;
 using Microsoft.AspNetCore.Identity;
@@ -50,6 +50,10 @@ namespace Infrastructure.Services.Identity
             {
                 return Result<string>.Failure("Invalid email or password.");
             }
+            if (!user.IsActive)
+            {
+                return Result<string>.Failure("Your account has been blocked by an administrator.");
+            }
             var Result = await UserManager.CheckPasswordAsync(user, password);
             if (!Result)
             {
@@ -59,14 +63,14 @@ namespace Infrastructure.Services.Identity
             return Result<string>.Success(user.Id);
         }
 
-        public async Task<Result<string>> CreateUserAsync(string email, string password)
+        public async Task<Result<string>> CreateUserAsync(string email, string password, string PhoneNumber, string Fullname)
         {
-            var user = new AppUser { UserName = email, Email = email };
+            var user = new AppUser { UserName = email, Email = email, PhoneNumber = PhoneNumber, FullName = Fullname};
             var result = await UserManager.CreateAsync(user, password);
 
             if (!result.Succeeded)
             {
-               return Result<string>.Failure(result.Errors.FirstOrDefault().ToString());
+               return Result<string>.Failure(result.Errors.FirstOrDefault()?.Description ?? "User creation failed.");
             }
 
             return Result<string>.Success(user.Id);
@@ -82,6 +86,12 @@ namespace Infrastructure.Services.Identity
             var roles = await UserManager.GetRolesAsync(user);
 
             return roles.ToList();
+        }
+
+        public async Task<string> GetUserFullNameAsync(string userId)
+        {
+            var user = await UserManager.FindByIdAsync(userId);
+            return user?.FullName ?? "Unknown";
         }
     }
 }
