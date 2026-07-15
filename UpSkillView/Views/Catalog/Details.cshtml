@@ -18,19 +18,19 @@
                 <!-- Breadcrumb -->
                 <nav aria-label="breadcrumb" class="mb-3">
                     <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a asp-action="Index" class="text-muted text-decoration-none">Courses</a></li>
-                        <li class="breadcrumb-item"><a href="#" class="text-muted text-decoration-none">@Model.Details.CategoryName</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">@Model.Details.Title</li>
+                        <li class="breadcrumb-item"><a asp-action="Index" class="text-light text-decoration-none opacity-75">Courses</a></li>
+                        <li class="breadcrumb-item"><a href="#" class="text-light text-decoration-none opacity-75">@Model.Details.CategoryName</a></li>
+                        <li class="breadcrumb-item active text-white" aria-current="page">@Model.Details.Title</li>
                     </ol>
                 </nav>
 
-                <h1 class="display-5 fw-bold mb-3">@Model.Details.Title</h1>
-                <p class="lead text-muted mb-4">@Model.Details.FullDescription</p>
+                <h1 class="display-5 fw-bold mb-3 text-white">@Model.Details.Title</h1>
+                <p class="lead text-light mb-4">@Model.Details.FullDescription</p>
                 
                 <div class="d-flex flex-wrap gap-4 align-items-center text-muted mb-4">
-                    <div class="d-flex align-items-center">
+                    <div class="d-flex align-items-center text-light">
                         <img src="https://ui-avatars.com/api/?name=@(Uri.EscapeDataString(Model.Details.InstructorSummary ?? "Instructor"))&background=random" class="rounded-circle me-2" width="40" height="40" alt="Instructor">
-                        <span>By <strong class="text-dark">@Model.Details.InstructorSummary</strong></span>
+                        <span>By <strong class="text-white">@Model.Details.InstructorSummary</strong></span>
                     </div>
                 </div>
             </div>

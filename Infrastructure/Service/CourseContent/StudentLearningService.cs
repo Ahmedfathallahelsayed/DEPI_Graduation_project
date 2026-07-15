@@ -133,7 +133,7 @@ namespace Infrastructure.Service.CourseContent
 
             return true;
         }
-        public async Task<IEnumerable<StudentCourseSummaryDto>> GetStudentCatalogAsync(string userId, string? search = null, int? categoryId = null)
+        public async Task<IEnumerable<StudentCourseSummaryDto>> GetStudentCatalogAsync(string userId, string? search = null, List<int>? categoryIds = null, List<Domain.Enum.CourseLevel>? levels = null, string? price = null)
         {
             var query = _context.Courses
                 .Include(c => c.Category)
@@ -147,9 +147,26 @@ namespace Infrastructure.Service.CourseContent
                 query = query.Where(c => c.Title.Contains(search) || c.ShortDescription.Contains(search));
             }
 
-            if (categoryId.HasValue)
+            if (categoryIds != null && categoryIds.Any())
             {
-                query = query.Where(c => c.CategoryId == categoryId.Value);
+                query = query.Where(c => categoryIds.Contains(c.CategoryId));
+            }
+
+            if (levels != null && levels.Any())
+            {
+                query = query.Where(c => levels.Contains(c.Level));
+            }
+
+            if (!string.IsNullOrEmpty(price))
+            {
+                if (price.Equals("free", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(c => c.Price == 0);
+                }
+                else if (price.Equals("paid", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(c => c.Price > 0);
+                }
             }
 
             var courses = await query.ToListAsync();
