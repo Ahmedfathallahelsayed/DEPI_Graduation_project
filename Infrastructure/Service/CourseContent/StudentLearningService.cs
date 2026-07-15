@@ -165,10 +165,11 @@ namespace Infrastructure.Service.CourseContent
                 enrolledCourseIds = new HashSet<int>(userEnrollments);
             }
 
-            // Instructor names might require joining with Users table, but since InstructorId is string,
-            // and we don't have ApplicationUser included in Course entity directly, 
-            // for now we set a default or use InstructorId if that's all we have. 
-            // Often, TM1/TM3 may have added User or we might need UserManager. Let's use InstructorId directly or empty string.
+            // Fetch Instructor Names
+            var instructorIds = courses.Select(c => c.InstructorId).Distinct().ToList();
+            var instructors = await _context.Users
+                .Where(u => instructorIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => string.IsNullOrWhiteSpace(u.FullName) ? u.UserName : u.FullName);
 
             return courses.Select(c => new StudentCourseSummaryDto
             {
@@ -178,7 +179,7 @@ namespace Infrastructure.Service.CourseContent
                 ThumbnailUrl = c.ThumbnailUrl,
                 Price = c.Price,
                 CategoryName = c.Category?.Name ?? "Uncategorized",
-                InstructorName = c.InstructorId, // TODO: Replace with actual name if User nav property exists
+                InstructorName = instructors.ContainsKey(c.InstructorId) ? instructors[c.InstructorId] : "Unknown Instructor",
                 Level = c.Level,
                 TotalLessons = c.CourseSections.SelectMany(s => s.Lessons).Count(),
                 IsEnrolled = enrolledCourseIds.Contains(c.Id)
@@ -199,6 +200,9 @@ namespace Infrastructure.Service.CourseContent
                 ? null 
                 : await _context.Enrollments.FirstOrDefaultAsync(e => e.CourseId == courseId && e.StudentId == userId);
 
+            var instructor = await _context.Users.FirstOrDefaultAsync(u => u.Id == course.InstructorId);
+            var instructorName = instructor != null ? (string.IsNullOrWhiteSpace(instructor.FullName) ? instructor.UserName : instructor.FullName) : "Unknown Instructor";
+
             return new StudentCourseDetailsDto
             {
                 CourseId = course.Id,
@@ -206,7 +210,7 @@ namespace Infrastructure.Service.CourseContent
                 FullDescription = course.Description,
                 ThumbnailUrl = course.ThumbnailUrl,
                 Price = course.Price,
-                InstructorSummary = course.InstructorId, // TODO: Replace with real user info if available
+                InstructorSummary = instructorName,
                 CategoryName = course.Category?.Name ?? "Uncategorized",
                 NumberOfSections = course.CourseSections.Count(),
                 NumberOfLessons = course.CourseSections.SelectMany(s => s.Lessons).Count(),

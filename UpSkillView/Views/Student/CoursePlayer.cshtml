@@ -4,6 +4,20 @@
 }
 
 <div class="container-fluid bg-dark text-white p-3 d-flex justify-content-between align-items-center sticky-top">
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show m-3 position-absolute top-0 start-50 translate-middle-x z-index-master" style="z-index: 1050;" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show m-3 position-absolute top-0 start-50 translate-middle-x z-index-master" style="z-index: 1050;" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
     <div class="d-flex align-items-center">
         <a asp-action="Dashboard" class="text-white text-decoration-none me-3"><i class="bi bi-arrow-left fs-4"></i></a>
         <h5 class="mb-0 text-truncate" style="max-width: 300px;">@Model.CourseTitle</h5>
@@ -14,6 +28,12 @@
             <div class="progress-bar bg-success" role="progressbar" style="width: @(Model.ProgressPercentage)%;" aria-valuenow="@(Model.ProgressPercentage)" aria-valuemin="0" aria-valuemax="100"></div>
         </div>
         <span class="ms-2 small fw-bold">@(Model.ProgressPercentage)%</span>
+        @if (Model.ProgressPercentage == 100)
+        {
+            <a asp-action="DownloadCertificate" asp-route-enrollmentId="@Model.EnrollmentId" asp-route-courseId="@Model.CourseId" class="btn btn-sm btn-outline-warning ms-3">
+                <i class="bi bi-award me-1"></i> Get Certificate
+            </a>
+        }
     </div>
 </div>
 
