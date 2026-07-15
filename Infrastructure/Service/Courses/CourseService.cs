@@ -105,7 +105,7 @@ namespace Infrastructure.Service.Courses
 
         public async Task<Result<CourseResponseDto>> UpdateAsync(int id, UpdateCourseDto dto, string instructorId)
         {
-            var course = await _unitOfWork.CourseRepo.getById(id);
+            var course = await _unitOfWork.CourseRepo.GetByIdWithDetailsAsync(id);
 
             if (course is null)
                 return Result<CourseResponseDto>.Failure($"Course with ID {id} was not found.");
@@ -208,7 +208,33 @@ namespace Infrastructure.Service.Courses
             return Result<CourseResponseDto>.Success(MapToResponse(course, course.Category?.Name ?? "", instructorName));
         }
 
+        // ── UNPUBLISH ─────────────────────────────────────────────────────────
+
+        public async Task<Result<CourseResponseDto>> UnpublishAsync(int id, string instructorId)
+        {
+            var course = await _unitOfWork.CourseRepo.GetByIdWithDetailsAsync(id);
+
+            if (course is null)
+                return Result<CourseResponseDto>.Failure($"Course with ID {id} was not found.");
+
+            if (course.InstructorId != instructorId)
+                return Result<CourseResponseDto>.Failure("You are not authorized to unpublish this course.");
+
+            if (course.Status != CourseStatus.Published)
+                return Result<CourseResponseDto>.Failure("Only published courses can be unpublished.");
+
+            course.Status     = CourseStatus.Draft;
+            course.IsApproved = false;
+            course.UpdatedAt  = DateTime.UtcNow;
+
+            await _unitOfWork.SaveChangesAsync();
+
+            var instructorName = await _userService.GetUserFullNameAsync(instructorId);
+            return Result<CourseResponseDto>.Success(MapToResponse(course, course.Category?.Name ?? "", instructorName));
+        }
+
         // ── GET PUBLISHED (Student Catalog) ──────────────────────────────────
+
 
         public async Task<Result<IEnumerable<CourseSummaryDto>>> GetPublishedAsync(string? search = null, int? categoryId = null)
         {
@@ -254,9 +280,17 @@ namespace Infrastructure.Service.Courses
         {
             if (string.IsNullOrEmpty(thumbnailUrl)) return;
 
-            var fullPath = Path.Combine(_env.WebRootPath, thumbnailUrl.TrimStart('/'));
-            if (File.Exists(fullPath))
-                File.Delete(fullPath);
+            try
+            {
+                var fullPath = Path.Combine(_env.WebRootPath, thumbnailUrl.TrimStart('/'));
+                if (File.Exists(fullPath))
+                    File.Delete(fullPath);
+            }
+            catch (Exception ex)
+            {
+                // Fail silently or log to prevent breaking HTTP response flow if file is temporarily locked
+                System.Diagnostics.Debug.WriteLine($"Failed to delete thumbnail {thumbnailUrl}: {ex.Message}");
+            }
         }
 
         // ── VALIDATION ────────────────────────────────────────────────────────
@@ -277,6 +311,9 @@ namespace Infrastructure.Service.Courses
 
             if (course.Price < 0)
                 return "Course price cannot be negative.";
+
+            if (string.IsNullOrWhiteSpace(course.ThumbnailUrl))
+                return "Course must have a thumbnail image before submitting for review.";
 
             if (course.CategoryId <= 0)
                 return "Course must be assigned to a category before submitting for review.";
@@ -334,6 +371,7 @@ namespace Infrastructure.Service.Courses
             CategoryName     = categoryName,
             InstructorName   = instructorName,
             EnrollmentCount  = c.Enrollments?.Count() ?? 0,
+            SectionCount     = c.CourseSections?.Count() ?? 0,
             CreatedAt        = c.CreatedAt,
             RejectionReason  = c.RejectionReason
         };

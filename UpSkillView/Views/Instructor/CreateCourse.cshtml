@@ -158,7 +158,10 @@
 
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
-                    <h5 class="mb-4"><i class="bi bi-image me-2 text-primary"></i>Course Thumbnail</h5>
+                    <h5 class="mb-4">
+                        <i class="bi bi-image me-2 text-primary"></i>Course Thumbnail
+                        <span class="badge bg-secondary-soft text-muted ms-2 small fw-normal">Optional</span>
+                    </h5>
 
                     <div class="row align-items-center mb-4">
                         <div class="col-md-4 mb-3 mb-md-0">
@@ -174,11 +177,12 @@
                         </div>
                         <div class="col-md-8">
                             <p class="text-muted small mb-2">
-                                Upload your course image. Recommended size: <strong>750×422px</strong>.
-                                Accepted formats: jpg, jpeg, gif, png.
+                                Upload your course thumbnail image. Recommended size: <strong>750×422px</strong>.<br/>
+                                Accepted formats: JPG, PNG, GIF, WebP. Max size: <strong>5MB</strong>.
                             </p>
                             <input asp-for="CourseImage" type="file" class="form-control"
                                    accept="image/*" id="thumbnailInput" />
+                            <span class="text-muted small mt-1 d-block" id="fileInfo"></span>
                             <span asp-validation-for="CourseImage" class="text-danger small"></span>
                         </div>
                     </div>
@@ -223,18 +227,51 @@
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
     <script>
-        // Live thumbnail preview
+        // Live thumbnail preview + file validation
         document.getElementById('thumbnailInput').addEventListener('change', function (e) {
             const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function (ev) {
-                    document.getElementById('previewImg').src = ev.target.result;
-                    document.getElementById('previewImg').style.display = 'block';
-                    document.getElementById('previewPlaceholder').style.display = 'none';
-                };
-                reader.readAsDataURL(file);
+            const maxSizeMB = 5;
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+
+            if (!file) return;
+
+            // Validate file type
+            if (!allowedTypes.includes(file.type)) {
+                alert('Invalid file type. Please upload a JPG, PNG, GIF, or WebP image.');
+                this.value = '';
+                return;
+            }
+
+            // Validate file size (max 5MB)
+            if (file.size > maxSizeMB * 1024 * 1024) {
+                alert(`File is too large. Maximum allowed size is ${maxSizeMB}MB. Your file is ${(file.size / 1024 / 1024).toFixed(1)}MB.`);
+                this.value = '';
+                return;
+            }
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function (ev) {
+                document.getElementById('previewImg').src = ev.target.result;
+                document.getElementById('previewImg').style.display = 'block';
+                document.getElementById('previewPlaceholder').style.display = 'none';
+                document.getElementById('fileInfo').textContent =
+                    `${file.name} (${(file.size / 1024).toFixed(0)} KB)`;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Warn user if they try to leave the page with unsaved changes
+        let formDirty = false;
+        document.querySelectorAll('input, textarea, select').forEach(el => {
+            el.addEventListener('change', () => formDirty = true);
+        });
+        window.addEventListener('beforeunload', (e) => {
+            if (formDirty) {
+                e.preventDefault();
+                e.returnValue = '';
             }
         });
+        document.querySelector('form').addEventListener('submit', () => formDirty = false);
     </script>
 }

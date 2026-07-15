@@ -1,8 +1,11 @@
 using Application.Courses.DTOs.Category;
 using Application.Courses.DTOs.Course;
+using Application.Courses.DTOs.Section;
+using Application.Courses.DTOs.Lesson;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text.Json;
 using UpSkillView.Models.Instructor;
 
@@ -69,12 +72,12 @@ namespace UpSkillView.Controllers
             var client = GetAuthenticatedClient();
             var response = await client.GetAsync("api/course/my-courses");
 
-            List<CourseResponseDto> courses = new();
+            List<CourseSummaryDto> courses = new();
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                courses = JsonSerializer.Deserialize<List<CourseResponseDto>>(content, JsonOpts)
-                          ?? new List<CourseResponseDto>();
+                courses = JsonSerializer.Deserialize<List<CourseSummaryDto>>(content, JsonOpts)
+                          ?? new List<CourseSummaryDto>();
             }
 
             return View(courses);
@@ -90,12 +93,12 @@ namespace UpSkillView.Controllers
             var client = GetAuthenticatedClient();
             var response = await client.GetAsync("api/course/my-courses");
 
-            List<CourseResponseDto> courses = new();
+            List<CourseSummaryDto> courses = new();
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                courses = JsonSerializer.Deserialize<List<CourseResponseDto>>(content, JsonOpts)
-                          ?? new List<CourseResponseDto>();
+                courses = JsonSerializer.Deserialize<List<CourseSummaryDto>>(content, JsonOpts)
+                          ?? new List<CourseSummaryDto>();
             }
 
             return View(courses);
@@ -106,17 +109,37 @@ namespace UpSkillView.Controllers
         // ══════════════════════════════════════════════════════════════════════
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitForReview(int id)
         {
             var client = GetAuthenticatedClient();
             var response = await client.PostAsync($"api/course/{id}/submit-for-review", null);
 
             if (response.IsSuccessStatusCode)
-                TempData["SuccessMessage"] = "Course submitted for admin review successfully!";
+                TempData["SuccessMessage"] = "Course submitted for review!";
             else
             {
                 var error = await response.Content.ReadAsStringAsync();
-                TempData["ErrorMessage"] = $"Could not submit: {error}";
+                TempData["ErrorMessage"] = $"Submission failed: {error}";
+            }
+
+            return RedirectToAction("MyCourses");
+        }
+
+        // ── Unpublish Course ──────────────────────────────────────────────────
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UnpublishCourse(int id)
+        {
+            var client   = GetAuthenticatedClient();
+            var response = await client.PostAsync($"api/course/{id}/unpublish", null);
+
+            if (response.IsSuccessStatusCode)
+                TempData["SuccessMessage"] = "Course moved back to Draft. It will need to be re-submitted for review.";
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                TempData["ErrorMessage"] = $"Could not unpublish course: {error}";
             }
 
             return RedirectToAction("MyCourses");
@@ -149,8 +172,8 @@ namespace UpSkillView.Controllers
             content.Add(new StringContent(model.CourseTitle),       "Title");
             content.Add(new StringContent(model.CourseSubtitle),    "ShortDescription");
             content.Add(new StringContent(model.CourseDescription), "Description");
-            content.Add(new StringContent(model.CategoryId.ToString()), "CategoryId");
-            content.Add(new StringContent(model.Level.ToString()),  "Level");
+            content.Add(new StringContent(model.CategoryId!.Value.ToString()), "CategoryId");
+            content.Add(new StringContent(model.Level!.Value.ToString()),      "Level");
             content.Add(new StringContent(model.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)), "Price");
             content.Add(new StringContent(model.Language),          "Language");
 
@@ -304,68 +327,253 @@ namespace UpSkillView.Controllers
         }
 
         // ══════════════════════════════════════════════════════════════════════
-        // MANAGE CURRICULUM & CONTENT
+        // MANAGE CONTENT / CURRICULUM BUILDER
         // ══════════════════════════════════════════════════════════════════════
 
         [HttpGet]
         public async Task<IActionResult> ManageContent(int id)
         {
             var client = GetAuthenticatedClient();
-            var response = await client.GetAsync($"api/CourseContent/course/{id}/sections");
             
-            var vm = new UpSkillView.Models.Instructor.ManageContentViewModel { CourseId = id };
-            
-            if (response.IsSuccessStatusCode)
+            // 1. Fetch course details
+            var courseResponse = await client.GetAsync($"api/course/my-courses/{id}");
+            if (!courseResponse.IsSuccessStatusCode)
             {
-                var content = await response.Content.ReadAsStringAsync();
-                var sections = JsonSerializer.Deserialize<List<Application.CourseContent.DTOs.SectionDto>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                if (sections != null)
-                {
-                    vm.Sections = sections;
-                }
+                TempData["ErrorMessage"] = "Course not found or access denied.";
+                return RedirectToAction("MyCourses");
+            }
+            var courseJson = await courseResponse.Content.ReadAsStringAsync();
+            var course = JsonSerializer.Deserialize<CourseResponseDto>(courseJson, JsonOpts);
+
+            // 2. Fetch sections and lessons
+            var sectionsResponse = await client.GetAsync($"api/coursesection/course/{id}");
+            List<SectionResponseDto> sections = new();
+            if (sectionsResponse.IsSuccessStatusCode)
+            {
+                var sectionsJson = await sectionsResponse.Content.ReadAsStringAsync();
+                sections = JsonSerializer.Deserialize<List<SectionResponseDto>>(sectionsJson, JsonOpts) 
+                           ?? new List<SectionResponseDto>();
             }
 
-            return View(vm);
+            var model = new ManageContentViewModel
+            {
+                Course = course ?? new CourseResponseDto(),
+                Sections = sections.OrderBy(s => s.DisplayOrder).ToList()
+            };
+
+            ViewBag.ApiBaseUrl = ApiBaseUrl;
+            return View(model);
         }
 
+        // ── AJAX Curriculum Builders ─────────────────────────────────────────
+
         [HttpPost]
-        public async Task<IActionResult> CreateSection([FromBody] Application.CourseContent.DTOs.CreateSectionDto dto)
+        public async Task<IActionResult> CreateSection([FromBody] Application.Courses.DTOs.Section.CreateSectionDto dto)
         {
             var client = GetAuthenticatedClient();
-            var response = await client.PostAsJsonAsync("api/CourseContent/sections", dto);
+            var response = await client.PostAsJsonAsync("api/coursesection", dto);
             if (response.IsSuccessStatusCode)
                 return Ok();
             return BadRequest(await response.Content.ReadAsStringAsync());
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateLesson([FromBody] Application.CourseContent.DTOs.CreateLessonDto dto)
+        public async Task<IActionResult> CreateLesson([FromBody] Application.Courses.DTOs.Lesson.CreateLessonDto dto)
         {
             var client = GetAuthenticatedClient();
-            var response = await client.PostAsJsonAsync("api/CourseContent/lessons", dto);
+            var response = await client.PostAsJsonAsync("api/lesson", dto);
             if (response.IsSuccessStatusCode)
                 return Ok();
             return BadRequest(await response.Content.ReadAsStringAsync());
         }
 
-        [HttpPost]
-        public async Task<IActionResult> DeleteSection(int id)
+        [HttpPost("Instructor/DeleteSection/{id:int}")]
+        public async Task<IActionResult> DeleteSectionAjax(int id)
         {
             var client = GetAuthenticatedClient();
-            var response = await client.DeleteAsync($"api/CourseContent/sections/{id}");
+            var response = await client.DeleteAsync($"api/coursesection/{id}");
             if (response.IsSuccessStatusCode)
                 return Ok();
             return BadRequest(await response.Content.ReadAsStringAsync());
         }
 
-        [HttpPost]
-        public async Task<IActionResult> DeleteLesson(int id)
+        [HttpPost("Instructor/DeleteLesson/{id:int}")]
+        public async Task<IActionResult> DeleteLessonAjax(int id)
         {
             var client = GetAuthenticatedClient();
-            var response = await client.DeleteAsync($"api/CourseContent/lessons/{id}");
+            var response = await client.DeleteAsync($"api/lesson/{id}");
             if (response.IsSuccessStatusCode)
                 return Ok();
             return BadRequest(await response.Content.ReadAsStringAsync());
+        }
+
+        // ── Add Section ──────────────────────────────────────────────────────
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddSection(int courseId, string title, int displayOrder)
+        {
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                TempData["ErrorMessage"] = "Section title is required.";
+                return RedirectToAction("ManageContent", new { id = courseId });
+            }
+
+            var client = GetAuthenticatedClient();
+            var dto = new { CourseId = courseId, Title = title.Trim(), DisplayOrder = displayOrder > 0 ? displayOrder : 1 };
+            
+            var response = await client.PostAsJsonAsync("api/coursesection", dto);
+
+            if (response.IsSuccessStatusCode)
+                TempData["SuccessMessage"] = "Section added successfully!";
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                TempData["ErrorMessage"] = $"Failed to add section: {error}";
+            }
+
+            return RedirectToAction("ManageContent", new { id = courseId });
+        }
+
+        // ── Delete Section ───────────────────────────────────────────────────
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteSection(int id, int courseId)
+        {
+            var client = GetAuthenticatedClient();
+            var response = await client.DeleteAsync($"api/coursesection/{id}");
+
+            if (response.IsSuccessStatusCode)
+                TempData["SuccessMessage"] = "Section deleted successfully!";
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                TempData["ErrorMessage"] = $"Failed to delete section: {error}";
+            }
+
+            return RedirectToAction("ManageContent", new { id = courseId });
+        }
+
+        // ── Edit Section ─────────────────────────────────────────────────────
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditSection(int id, int courseId, string title, int displayOrder)
+        {
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                TempData["ErrorMessage"] = "Section title is required.";
+                return RedirectToAction("ManageContent", new { id = courseId });
+            }
+
+            var client  = GetAuthenticatedClient();
+            var dto     = new { Title = title.Trim(), DisplayOrder = displayOrder > 0 ? displayOrder : 1 };
+            var json    = new StringContent(System.Text.Json.JsonSerializer.Serialize(dto),
+                              System.Text.Encoding.UTF8, "application/json");
+            var response = await client.PutAsync($"api/coursesection/{id}", json);
+
+            if (response.IsSuccessStatusCode)
+                TempData["SuccessMessage"] = "Section updated successfully!";
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                TempData["ErrorMessage"] = $"Failed to update section: {error}";
+            }
+
+            return RedirectToAction("ManageContent", new { id = courseId });
+        }
+
+        // ── Add Lesson ───────────────────────────────────────────────────────
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddLesson(int courseId, int sectionId, string title, int contentType, string? videoUrl, string? textContent, int durationInMinutes, int displayOrder, bool isPreview)
+        {
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                TempData["ErrorMessage"] = "Lesson title is required.";
+                return RedirectToAction("ManageContent", new { id = courseId });
+            }
+
+            var client = GetAuthenticatedClient();
+            var dto = new
+            {
+                SectionId = sectionId,
+                Title = title.Trim(),
+                ContentType = contentType,
+                VideoUrl = videoUrl?.Trim(),
+                TextContent = textContent?.Trim(),
+                DurationInMinutes = durationInMinutes,
+                DisplayOrder = displayOrder > 0 ? displayOrder : 1,
+                IsPreview = isPreview
+            };
+
+            var response = await client.PostAsJsonAsync("api/lesson", dto);
+
+            if (response.IsSuccessStatusCode)
+                TempData["SuccessMessage"] = "Lesson added successfully!";
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                TempData["ErrorMessage"] = $"Failed to add lesson: {error}";
+            }
+
+            return RedirectToAction("ManageContent", new { id = courseId });
+        }
+
+        // ── Delete Lesson ────────────────────────────────────────────────────
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteLesson(int id, int courseId)
+        {
+            var client = GetAuthenticatedClient();
+            var response = await client.DeleteAsync($"api/lesson/{id}");
+
+            if (response.IsSuccessStatusCode)
+                TempData["SuccessMessage"] = "Lesson deleted successfully!";
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                TempData["ErrorMessage"] = $"Failed to delete lesson: {error}";
+            }
+
+            return RedirectToAction("ManageContent", new { id = courseId });
+        }
+
+        // ── Edit Lesson ──────────────────────────────────────────────────────
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditLesson(int id, int courseId, string title,
+            int contentType, string? videoUrl, string? textContent,
+            int durationInMinutes, int displayOrder, bool isPreview)
+        {
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                TempData["ErrorMessage"] = "Lesson title is required.";
+                return RedirectToAction("ManageContent", new { id = courseId });
+            }
+
+            var client = GetAuthenticatedClient();
+            var dto = new
+            {
+                Title             = title.Trim(),
+                ContentType       = contentType,
+                VideoUrl          = videoUrl?.Trim(),
+                TextContent       = textContent?.Trim(),
+                DurationInMinutes = durationInMinutes,
+                DisplayOrder      = displayOrder > 0 ? displayOrder : 1,
+                IsPreview         = isPreview
+            };
+            var json     = new StringContent(System.Text.Json.JsonSerializer.Serialize(dto),
+                               System.Text.Encoding.UTF8, "application/json");
+            var response = await client.PutAsync($"api/lesson/{id}", json);
+
+            if (response.IsSuccessStatusCode)
+                TempData["SuccessMessage"] = "Lesson updated successfully!";
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                TempData["ErrorMessage"] = $"Failed to update lesson: {error}";
+            }
+
+            return RedirectToAction("ManageContent", new { id = courseId });
         }
     }
 }

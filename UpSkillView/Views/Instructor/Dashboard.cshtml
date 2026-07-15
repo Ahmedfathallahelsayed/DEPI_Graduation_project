@@ -1,4 +1,4 @@
-@model List<Application.Courses.DTOs.Course.CourseResponseDto>
+@model List<Application.Courses.DTOs.Course.CourseSummaryDto>
 @{
     ViewData["Title"] = "Instructor Dashboard";
     Layout = "_DashboardLayout";
@@ -26,7 +26,7 @@
 <div class="row g-4 mb-4">
 
     <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card border-0 shadow-sm h-100 card-hover">
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <h6 class="text-muted mb-0 fw-normal">Total Courses</h6>
@@ -41,7 +41,7 @@
     </div>
 
     <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card border-0 shadow-sm h-100 card-hover">
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <h6 class="text-muted mb-0 fw-normal">Published</h6>
@@ -56,7 +56,7 @@
     </div>
 
     <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card border-0 shadow-sm h-100 card-hover">
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <h6 class="text-muted mb-0 fw-normal">Drafts / Review</h6>
@@ -71,7 +71,7 @@
     </div>
 
     <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card border-0 shadow-sm h-100 card-hover">
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <h6 class="text-muted mb-0 fw-normal">Total Students</h6>
@@ -164,14 +164,16 @@
                                     }
                                 </td>
                                 <td class="pe-4 text-end">
-                                    <a asp-action="ManageContent" asp-route-id="@course.Id"
-                                       class="btn btn-sm btn-outline-info me-1" title="Manage Curriculum">
-                                        <i class="bi bi-collection-play"></i>
-                                    </a>
-                                    <a asp-action="EditCourse" asp-route-id="@course.Id"
-                                       class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-pencil-square"></i> Edit
-                                    </a>
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a asp-action="EditCourse" asp-route-id="@course.Id"
+                                           class="btn btn-sm btn-outline-primary" title="Edit Course">
+                                            <i class="bi bi-pencil-square"></i> Edit
+                                        </a>
+                                        <a asp-action="ManageContent" asp-route-id="@course.Id"
+                                           class="btn btn-sm btn-outline-success" title="Manage Curriculum">
+                                            <i class="bi bi-collection"></i> Curriculum
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         }

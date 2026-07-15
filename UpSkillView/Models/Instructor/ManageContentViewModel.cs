@@ -1,11 +1,12 @@
-using Application.CourseContent.DTOs;
+using Application.Courses.DTOs.Course;
+using Application.Courses.DTOs.Section;
 using System.Collections.Generic;
 
 namespace UpSkillView.Models.Instructor
 {
     public class ManageContentViewModel
     {
-        public int CourseId { get; set; }
-        public List<SectionDto> Sections { get; set; } = new List<SectionDto>();
+        public CourseResponseDto Course { get; set; } = new();
+        public List<SectionResponseDto> Sections { get; set; } = new();
     }
 }

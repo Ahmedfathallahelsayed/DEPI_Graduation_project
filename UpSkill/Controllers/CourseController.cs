@@ -162,5 +162,21 @@ namespace UpSkill.Controllers
                 ? Ok(result.Value)
                 : BadRequest(result.Error);
         }
+        // ── POST /api/course/{id}/unpublish ───────────────────────────────────
+        /// <summary>
+        /// Revert a published course back to Draft. Instructor only.
+        /// Course will need to be re-submitted and re-approved before going live.
+        /// </summary>
+        [HttpPost("{id:int}/unpublish")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Instructor")]
+        public async Task<IActionResult> Unpublish(int id)
+        {
+            var instructorId = GetCurrentUserId();
+            var result = await _courseService.UnpublishAsync(id, instructorId);
+
+            return result.IsSuccess
+                ? Ok(result.Value)
+                : BadRequest(result.Error);
+        }
     }
 }

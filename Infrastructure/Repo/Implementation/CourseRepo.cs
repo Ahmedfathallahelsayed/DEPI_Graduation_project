@@ -23,6 +23,7 @@ namespace Infrastructure.Repo.Implementation
             return await dbContext.Courses
                 .Include(c => c.Category)
                 .Include(c => c.Enrollments)
+                .Include(c => c.CourseSections)
                 .Where(c => c.InstructorId == instructorId)
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();

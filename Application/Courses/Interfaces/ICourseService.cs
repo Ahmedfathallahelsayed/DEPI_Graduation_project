@@ -45,6 +45,12 @@ namespace Application.Courses.Interfaces
         /// </summary>
         Task<Result<CourseResponseDto>> SubmitForReviewAsync(int id, string instructorId);
 
+        /// <summary>
+        /// Revert a published course back to Draft status.
+        /// Only the owning instructor can unpublish. Course loses approval.
+        /// </summary>
+        Task<Result<CourseResponseDto>> UnpublishAsync(int id, string instructorId);
+
         // ── Public / Catalog Operations (used by TM4 - Student flow) ────────
 
         /// <summary>
