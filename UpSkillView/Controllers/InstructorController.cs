@@ -188,13 +188,7 @@ namespace UpSkillView.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                TempData["SuccessMessage"] = "Course created successfully! Now you can manage its sections and lessons.";
-                var responseBody = await response.Content.ReadAsStringAsync();
-                var createdCourse = JsonSerializer.Deserialize<CourseResponseDto>(responseBody, JsonOpts);
-                if (createdCourse != null)
-                {
-                    return RedirectToAction("EditCourse", new { id = createdCourse.Id, activeTab = "sessions" });
-                }
+                TempData["SuccessMessage"] = "Course created successfully!";
                 return RedirectToAction("MyCourses");
             }
 
@@ -209,9 +203,8 @@ namespace UpSkillView.Controllers
         // ══════════════════════════════════════════════════════════════════════
 
         [HttpGet]
-        public async Task<IActionResult> EditCourse(int id, string? activeTab = null)
+        public async Task<IActionResult> EditCourse(int id)
         {
-            ViewBag.ActiveTab = activeTab;
             var client = GetAuthenticatedClient();
             var response = await client.GetAsync($"api/course/my-courses/{id}");
 
@@ -241,18 +234,6 @@ namespace UpSkillView.Controllers
                                         ? null
                                         : $"{ApiBaseUrl}{course.ThumbnailUrl}"
             };
-
-            // Fetch course sections and lessons
-            var sectionsResponse = await client.GetAsync($"api/CourseContent/course/{id}/sections");
-            if (sectionsResponse.IsSuccessStatusCode)
-            {
-                var sectionsContent = await sectionsResponse.Content.ReadAsStringAsync();
-                var sections = JsonSerializer.Deserialize<List<Application.CourseContent.DTOs.SectionDto>>(sectionsContent, JsonOpts);
-                if (sections != null)
-                {
-                    model.Sections = sections;
-                }
-            }
 
             await LoadCategoriesAsync();
             ViewBag.ApiBaseUrl = ApiBaseUrl;
@@ -363,48 +344,6 @@ namespace UpSkillView.Controllers
 
             ViewBag.ApiBaseUrl = ApiBaseUrl;
             return View(model);
-        }
-
-        // ── AJAX Curriculum Builders ─────────────────────────────────────────
-
-        [HttpPost]
-        public async Task<IActionResult> CreateSection([FromBody] Application.Courses.DTOs.Section.CreateSectionDto dto)
-        {
-            var client = GetAuthenticatedClient();
-            var response = await client.PostAsJsonAsync("api/coursesection", dto);
-            if (response.IsSuccessStatusCode)
-                return Ok();
-            return BadRequest(await response.Content.ReadAsStringAsync());
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> CreateLesson([FromBody] Application.Courses.DTOs.Lesson.CreateLessonDto dto)
-        {
-            var client = GetAuthenticatedClient();
-            var response = await client.PostAsJsonAsync("api/lesson", dto);
-            if (response.IsSuccessStatusCode)
-                return Ok();
-            return BadRequest(await response.Content.ReadAsStringAsync());
-        }
-
-        [HttpPost("Instructor/DeleteSection/{id:int}")]
-        public async Task<IActionResult> DeleteSectionAjax(int id)
-        {
-            var client = GetAuthenticatedClient();
-            var response = await client.DeleteAsync($"api/coursesection/{id}");
-            if (response.IsSuccessStatusCode)
-                return Ok();
-            return BadRequest(await response.Content.ReadAsStringAsync());
-        }
-
-        [HttpPost("Instructor/DeleteLesson/{id:int}")]
-        public async Task<IActionResult> DeleteLessonAjax(int id)
-        {
-            var client = GetAuthenticatedClient();
-            var response = await client.DeleteAsync($"api/lesson/{id}");
-            if (response.IsSuccessStatusCode)
-                return Ok();
-            return BadRequest(await response.Content.ReadAsStringAsync());
         }
 
         // ── Add Section ──────────────────────────────────────────────────────

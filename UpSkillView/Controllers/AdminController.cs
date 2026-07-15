@@ -1,5 +1,4 @@
 using Application.Admin.DTOs;
-using Application.Courses.DTOs.Category;
 using Application.Courses.DTOs.Course;
 using Application.Courses.DTOs.Category;
 using Microsoft.AspNetCore.Authorization;
@@ -20,9 +19,6 @@ namespace UpSkillView.Controllers
     {
         private readonly IHttpClientFactory _httpClientFactory;
 
-        private static readonly JsonSerializerOptions JsonOpts =
-            new() { PropertyNameCaseInsensitive = true };
-
         public AdminController(IHttpClientFactory httpClientFactory)
         {
             _httpClientFactory = httpClientFactory;
@@ -31,10 +27,11 @@ namespace UpSkillView.Controllers
         private HttpClient GetAuthenticatedClient()
         {
             var client = _httpClientFactory.CreateClient("UpSkillAPI");
-            var token  = HttpContext.Session.GetString("JwtToken");
+            var token = HttpContext.Session.GetString("JwtToken");
             if (!string.IsNullOrEmpty(token))
-                client.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Bearer", token);
+            {
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
             return client;
         }
 
@@ -84,10 +81,6 @@ namespace UpSkillView.Controllers
             return content.Trim('"');
         }
 
-        // ══════════════════════════════════════════════════════════════
-        // ADMIN DASHBOARD
-        // ══════════════════════════════════════════════════════════════
-
         public async Task<IActionResult> Dashboard()
         {
             try
@@ -98,7 +91,7 @@ namespace UpSkillView.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    var stats = JsonSerializer.Deserialize<DashboardStatsDto>(content, JsonOpts);
+                    var stats = JsonSerializer.Deserialize<DashboardStatsDto>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                     return View(stats);
                 }
                 TempData["ErrorMessage"] = await GetErrorMessageAsync(response);
@@ -111,10 +104,6 @@ namespace UpSkillView.Controllers
             return View(new DashboardStatsDto());
         }
 
-        // ══════════════════════════════════════════════════════════════
-        // COURSE APPROVAL
-        // ══════════════════════════════════════════════════════════════
-
         public async Task<IActionResult> Courses()
         {
             try
@@ -125,7 +114,7 @@ namespace UpSkillView.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    var courses = JsonSerializer.Deserialize<List<CourseResponseDto>>(content, JsonOpts);
+                    var courses = JsonSerializer.Deserialize<List<CourseResponseDto>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                     return View(courses ?? new List<CourseResponseDto>());
                 }
                 TempData["ErrorMessage"] = await GetErrorMessageAsync(response);
@@ -139,18 +128,13 @@ namespace UpSkillView.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Approve(int id)
         {
             try
             {
                 var client = GetAuthenticatedClient();
                 var response = await client.PostAsync($"api/Admin/courses/{id}/approve", null);
-                if (response.IsSuccessStatusCode)
-                {
-                    TempData["SuccessMessage"] = "Course approved successfully.";
-                }
-                else
+                if (!response.IsSuccessStatusCode)
                 {
                     TempData["ErrorMessage"] = await GetErrorMessageAsync(response);
                 }
@@ -163,7 +147,6 @@ namespace UpSkillView.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Reject(int id, string reason)
         {
             try
@@ -172,11 +155,7 @@ namespace UpSkillView.Controllers
                 var dto = new RejectCourseDto { Reason = reason };
                 var content = new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, "application/json");
                 var response = await client.PostAsync($"api/Admin/courses/{id}/reject", content);
-                if (response.IsSuccessStatusCode)
-                {
-                    TempData["SuccessMessage"] = "Course rejected successfully.";
-                }
-                else
+                if (!response.IsSuccessStatusCode)
                 {
                     TempData["ErrorMessage"] = await GetErrorMessageAsync(response);
                 }
@@ -187,32 +166,6 @@ namespace UpSkillView.Controllers
             }
             return RedirectToAction("Courses");
         }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Publish(int id)
-        {
-            try
-            {
-                var client = GetAuthenticatedClient();
-                var result = await client.PostAsync($"api/Admin/courses/{id}/publish", null);
-
-                if (result.IsSuccessStatusCode)
-                    TempData["SuccessMessage"] = "Course published successfully.";
-                else
-                    TempData["ErrorMessage"] = await GetErrorMessageAsync(result);
-            }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = $"API Connection Error: {ex.Message}";
-            }
-
-            return RedirectToAction("Courses");
-        }
-
-        // ══════════════════════════════════════════════════════════════
-        // USERS (Member 1)
-        // ══════════════════════════════════════════════════════════════
 
         public async Task<IActionResult> Users()
         {
@@ -224,7 +177,7 @@ namespace UpSkillView.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    var users = JsonSerializer.Deserialize<List<UserDto>>(content, JsonOpts);
+                    var users = JsonSerializer.Deserialize<List<UserDto>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                     return View(users ?? new List<UserDto>());
                 }
                 TempData["ErrorMessage"] = await GetErrorMessageAsync(response);
@@ -238,18 +191,13 @@ namespace UpSkillView.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Block(string id)
         {
             try
             {
                 var client = GetAuthenticatedClient();
                 var response = await client.PostAsync($"api/Admin/users/{id}/block", null);
-                if (response.IsSuccessStatusCode)
-                {
-                    TempData["SuccessMessage"] = "User blocked successfully.";
-                }
-                else
+                if (!response.IsSuccessStatusCode)
                 {
                     TempData["ErrorMessage"] = await GetErrorMessageAsync(response);
                 }
@@ -262,18 +210,13 @@ namespace UpSkillView.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Unblock(string id)
         {
             try
             {
                 var client = GetAuthenticatedClient();
                 var response = await client.PostAsync($"api/Admin/users/{id}/unblock", null);
-                if (response.IsSuccessStatusCode)
-                {
-                    TempData["SuccessMessage"] = "User unblocked successfully.";
-                }
-                else
+                if (!response.IsSuccessStatusCode)
                 {
                     TempData["ErrorMessage"] = await GetErrorMessageAsync(response);
                 }
@@ -286,7 +229,6 @@ namespace UpSkillView.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditUser(string id, string fullName, string phoneNumber)
         {
             try
@@ -295,11 +237,7 @@ namespace UpSkillView.Controllers
                 var dto = new EditUserDto { FullName = fullName, PhoneNumber = phoneNumber };
                 var content = new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, "application/json");
                 var response = await client.PutAsync($"api/Admin/users/{id}", content);
-                if (response.IsSuccessStatusCode)
-                {
-                    TempData["SuccessMessage"] = "User updated successfully.";
-                }
-                else
+                if (!response.IsSuccessStatusCode)
                 {
                     TempData["ErrorMessage"] = await GetErrorMessageAsync(response);
                 }
@@ -311,9 +249,7 @@ namespace UpSkillView.Controllers
             return RedirectToAction("Users");
         }
 
-        // ══════════════════════════════════════════════════════════════
-        // CATEGORY MANAGEMENT
-        // ══════════════════════════════════════════════════════════════
+        // ── Category Management Actions ───────────────────────────────
 
         [HttpGet]
         public async Task<IActionResult> Categories()
@@ -321,52 +257,35 @@ namespace UpSkillView.Controllers
             try
             {
                 var client = GetAuthenticatedClient();
-                var response = await client.GetAsync("api/category/all");
+                var response = await client.GetAsync("api/Category/all");
 
-                List<CategoryResponseDto> categories = new();
                 if (response.IsSuccessStatusCode)
                 {
-                    var json = await response.Content.ReadAsStringAsync();
-                    categories = JsonSerializer.Deserialize<List<CategoryResponseDto>>(json, JsonOpts)
-                                 ?? new List<CategoryResponseDto>();
+                    var content = await response.Content.ReadAsStringAsync();
+                    var categories = JsonSerializer.Deserialize<List<CategoryResponseDto>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    return View(categories ?? new List<CategoryResponseDto>());
                 }
-                else
-                {
-                    TempData["ErrorMessage"] = await GetErrorMessageAsync(response);
-                }
-
-                return View(categories);
+                
+                TempData["ErrorMessage"] = await GetErrorMessageAsync(response);
             }
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = $"API Connection Error: {ex.Message}";
-                return View(new List<CategoryResponseDto>());
             }
+
+            return View(new List<CategoryResponseDto>());
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateCategory(string name, string? description)
+        public async Task<IActionResult> CreateCategory(string name, string description = "")
         {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                TempData["ErrorMessage"] = "Category name is required.";
-                return RedirectToAction("Categories");
-            }
-
             try
             {
                 var client = GetAuthenticatedClient();
-                var payload = new { Name = name.Trim(), Description = description?.Trim() ?? string.Empty };
-                var json = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-
-                var response = await client.PostAsync("api/category", json);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    TempData["SuccessMessage"] = $"Category \"{name}\" created successfully.";
-                }
-                else
+                var dto = new CreateCategoryDto { Name = name, Description = description ?? "" };
+                var content = new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, "application/json");
+                var response = await client.PostAsync("api/Category", content);
+                if (!response.IsSuccessStatusCode)
                 {
                     TempData["ErrorMessage"] = await GetErrorMessageAsync(response);
                 }
@@ -375,33 +294,19 @@ namespace UpSkillView.Controllers
             {
                 TempData["ErrorMessage"] = $"API Connection Error: {ex.Message}";
             }
-
             return RedirectToAction("Categories");
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditCategory(int id, string name, string? description, bool isActive)
+        public async Task<IActionResult> EditCategory(int id, string name, string description = "", bool isActive = true)
         {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                TempData["ErrorMessage"] = "Category name is required.";
-                return RedirectToAction("Categories");
-            }
-
             try
             {
                 var client = GetAuthenticatedClient();
-                var payload = new { Name = name.Trim(), Description = description?.Trim() ?? string.Empty, IsActive = isActive };
-                var json = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-
-                var response = await client.PutAsync($"api/category/{id}", json);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    TempData["SuccessMessage"] = $"Category \"{name}\" updated successfully.";
-                }
-                else
+                var dto = new UpdateCategoryDto { Name = name, Description = description ?? "", IsActive = isActive };
+                var content = new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, "application/json");
+                var response = await client.PutAsync($"api/Category/{id}", content);
+                if (!response.IsSuccessStatusCode)
                 {
                     TempData["ErrorMessage"] = await GetErrorMessageAsync(response);
                 }
@@ -410,24 +315,17 @@ namespace UpSkillView.Controllers
             {
                 TempData["ErrorMessage"] = $"API Connection Error: {ex.Message}";
             }
-
             return RedirectToAction("Categories");
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteCategory(int id)
         {
             try
             {
                 var client = GetAuthenticatedClient();
-                var response = await client.DeleteAsync($"api/category/{id}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    TempData["SuccessMessage"] = "Category deleted successfully.";
-                }
-                else
+                var response = await client.DeleteAsync($"api/Category/{id}");
+                if (!response.IsSuccessStatusCode)
                 {
                     TempData["ErrorMessage"] = await GetErrorMessageAsync(response);
                 }
@@ -436,7 +334,6 @@ namespace UpSkillView.Controllers
             {
                 TempData["ErrorMessage"] = $"API Connection Error: {ex.Message}";
             }
-
             return RedirectToAction("Categories");
         }
     }
