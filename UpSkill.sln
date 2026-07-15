@@ -13,8 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastru
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpSkillMVC", "UpSkillView\UpSkillMVC.csproj", "{ECF26DEE-1D25-4729-BB43-97B5EA6BE2B0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpSkill.Tests", "UpSkill.Tests\UpSkill.Tests.csproj", "{6F814A42-9E5D-4A11-8E33-ABE29C0D3DFF}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,18 +83,6 @@ Global
 		{ECF26DEE-1D25-4729-BB43-97B5EA6BE2B0}.Release|x64.Build.0 = Release|Any CPU
 		{ECF26DEE-1D25-4729-BB43-97B5EA6BE2B0}.Release|x86.ActiveCfg = Release|Any CPU
 		{ECF26DEE-1D25-4729-BB43-97B5EA6BE2B0}.Release|x86.Build.0 = Release|Any CPU
-		{6F814A42-9E5D-4A11-8E33-ABE29C0D3DFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6F814A42-9E5D-4A11-8E33-ABE29C0D3DFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6F814A42-9E5D-4A11-8E33-ABE29C0D3DFF}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{6F814A42-9E5D-4A11-8E33-ABE29C0D3DFF}.Debug|x64.Build.0 = Debug|Any CPU
-		{6F814A42-9E5D-4A11-8E33-ABE29C0D3DFF}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{6F814A42-9E5D-4A11-8E33-ABE29C0D3DFF}.Debug|x86.Build.0 = Debug|Any CPU
-		{6F814A42-9E5D-4A11-8E33-ABE29C0D3DFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6F814A42-9E5D-4A11-8E33-ABE29C0D3DFF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6F814A42-9E5D-4A11-8E33-ABE29C0D3DFF}.Release|x64.ActiveCfg = Release|Any CPU
-		{6F814A42-9E5D-4A11-8E33-ABE29C0D3DFF}.Release|x64.Build.0 = Release|Any CPU
-		{6F814A42-9E5D-4A11-8E33-ABE29C0D3DFF}.Release|x86.ActiveCfg = Release|Any CPU
-		{6F814A42-9E5D-4A11-8E33-ABE29C0D3DFF}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
