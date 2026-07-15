@@ -130,6 +130,7 @@ namespace Infrastructure.Service.Admin
 
             course.IsApproved = true;
             course.Status = CourseStatus.Published; // Directly publish on approval
+            course.RejectionReason = null;
             course.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -157,6 +158,7 @@ namespace Infrastructure.Service.Admin
 
             course.IsApproved = false;
             course.Status = CourseStatus.Draft;
+            course.RejectionReason = reason;
             course.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -424,7 +426,8 @@ namespace Infrastructure.Service.Admin
             EnrollmentCount = c.Enrollments?.Count() ?? 0,
             SectionCount = c.CourseSections?.Count() ?? 0,
             CreatedAt = c.CreatedAt,
-            UpdatedAt = c.UpdatedAt
+            UpdatedAt = c.UpdatedAt,
+            RejectionReason = c.RejectionReason
         };
 
         private static CourseSummaryDto MapToSummary(Course c, string categoryName, string instructorName) => new()
@@ -441,7 +444,8 @@ namespace Infrastructure.Service.Admin
             CategoryName = categoryName,
             InstructorName = instructorName,
             EnrollmentCount = c.Enrollments?.Count() ?? 0,
-            CreatedAt = c.CreatedAt
+            CreatedAt = c.CreatedAt,
+            RejectionReason = c.RejectionReason
         };
     }
 }

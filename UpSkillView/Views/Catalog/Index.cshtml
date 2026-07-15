@@ -19,7 +19,11 @@
         </div>
         <div class="col-md-6 text-md-end mt-3 mt-md-0">
             <form asp-action="Index" method="get" class="d-inline-flex align-items-center gap-2">
-                <input type="text" name="search" class="form-control w-auto" placeholder="Search..." value="@Context.Request.Query["search"]" />
+                @if (ViewBag.SelectedCategoryId != null)
+                {
+                    <input type="hidden" name="categoryId" value="@ViewBag.SelectedCategoryId" />
+                }
+                <input type="text" name="search" class="form-control w-auto" placeholder="Search..." value="@ViewBag.SearchQuery" />
                 <button type="submit" class="btn btn-outline-primary">Search</button>
             </form>
         </div>
@@ -29,11 +33,29 @@
         <!-- Sidebar Filters -->
         <div class="col-lg-3 mb-4 mb-lg-0">
             <div class="card p-3 sticky-top" style="top: 100px; z-index: 1;">
-                <h5 class="mb-4">Filters</h5>
+                <h5 class="mb-3">Filters</h5>
                 
-                <p class="text-muted small">Filters can be implemented here by Category IDs.</p>
+                <div class="mb-3">
+                    <h6 class="text-muted small fw-bold text-uppercase mb-2">Categories</h6>
+                    <div class="list-group list-group-flush rounded border">
+                        <a asp-action="Index" asp-route-search="@ViewBag.SearchQuery" asp-route-categoryId=""
+                           class="list-group-item list-group-item-action py-2 @(ViewBag.SelectedCategoryId == null ? "active text-white bg-primary" : "text-dark")" style="font-size: 0.9rem;">
+                            All Categories
+                        </a>
+                        @if (ViewBag.Categories != null)
+                        {
+                            foreach (var cat in (List<Application.Courses.DTOs.Category.CategoryResponseDto>)ViewBag.Categories)
+                            {
+                                <a asp-action="Index" asp-route-search="@ViewBag.SearchQuery" asp-route-categoryId="@cat.Id"
+                                   class="list-group-item list-group-item-action py-2 @(ViewBag.SelectedCategoryId == cat.Id ? "active text-white bg-primary" : "text-dark")" style="font-size: 0.9rem;">
+                                    @cat.Name
+                                </a>
+                            }
+                        }
+                    </div>
+                </div>
 
-                <a asp-action="Index" class="btn btn-outline-secondary w-100 mt-2">Clear Filters</a>
+                <a asp-action="Index" class="btn btn-outline-secondary btn-sm w-100">Clear Filters</a>
             </div>
         </div>
 

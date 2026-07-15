@@ -87,6 +87,7 @@ namespace Infrastructure.Service.Courses
                 ThumbnailUrl     = thumbnailUrl,
                 Status           = CourseStatus.Draft,
                 IsApproved       = false,
+                RejectionReason  = null,
                 CreatedAt        = DateTime.UtcNow,
                 UpdatedAt        = DateTime.UtcNow
             };
@@ -132,6 +133,7 @@ namespace Infrastructure.Service.Courses
             // Reset status to Draft and revoke approval if course is modified
             course.Status           = CourseStatus.Draft;
             course.IsApproved       = false;
+            course.RejectionReason  = null;
             
             course.UpdatedAt        = DateTime.UtcNow;
 
@@ -155,8 +157,6 @@ namespace Infrastructure.Service.Courses
             if (course.InstructorId != instructorId)
                 return Result.Failure("You are not authorized to delete this course.");
 
-            if (course.Status == CourseStatus.Published)
-                return Result.Failure("Published courses cannot be deleted. Please unpublish the course first.");
 
             if (course.Enrollments != null && course.Enrollments.Any())
                 return Result.Failure("Cannot delete a course that has enrolled students.");
@@ -197,6 +197,7 @@ namespace Infrastructure.Service.Courses
 
             course.Status = CourseStatus.SubmittedForApproval;
             course.IsApproved = false;
+            course.RejectionReason = null;
             course.UpdatedAt = DateTime.UtcNow;
 
             await _unitOfWork.CourseRepo.Update(course);
@@ -315,7 +316,8 @@ namespace Infrastructure.Service.Courses
             EnrollmentCount  = c.Enrollments?.Count() ?? 0,
             SectionCount     = c.CourseSections?.Count() ?? 0,
             CreatedAt        = c.CreatedAt,
-            UpdatedAt        = c.UpdatedAt
+            UpdatedAt        = c.UpdatedAt,
+            RejectionReason  = c.RejectionReason
         };
 
         private static CourseSummaryDto MapToSummary(Course c, string categoryName, string instructorName) => new()
@@ -332,7 +334,8 @@ namespace Infrastructure.Service.Courses
             CategoryName     = categoryName,
             InstructorName   = instructorName,
             EnrollmentCount  = c.Enrollments?.Count() ?? 0,
-            CreatedAt        = c.CreatedAt
+            CreatedAt        = c.CreatedAt,
+            RejectionReason  = c.RejectionReason
         };
     }
 }

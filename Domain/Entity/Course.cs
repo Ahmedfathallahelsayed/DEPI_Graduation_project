@@ -1,4 +1,4 @@
-﻿using Domain.Enum;
+using Domain.Enum;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +23,7 @@ namespace Domain.Entity
         public bool IsApproved { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public string? RejectionReason { get; set; }
 
         // Navigation Properties
         public virtual Category Category { get; set; }

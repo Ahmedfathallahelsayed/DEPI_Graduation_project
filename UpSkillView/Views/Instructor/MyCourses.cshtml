@@ -93,6 +93,14 @@
                             @course.ShortDescription
                         </p>
 
+                        @if (course.Status == Domain.Enum.CourseStatus.Draft && !string.IsNullOrEmpty(course.RejectionReason))
+                        {
+                            <div class="alert alert-danger p-2 mb-3 small" style="font-size: 0.8rem;">
+                                <i class="bi bi-exclamation-octagon me-1"></i>
+                                <strong>Rejection Reason:</strong> @course.RejectionReason
+                            </div>
+                        }
+
                         <!-- Stats -->
                         <div class="d-flex gap-3 small text-muted mt-auto mb-3">
                             <span><i class="bi bi-people me-1"></i>@course.EnrollmentCount students</span>
@@ -128,17 +136,14 @@
                             </form>
                         }
 
-                        <!-- Delete (not allowed if Published) -->
-                        @if (course.Status != Domain.Enum.CourseStatus.Published)
-                        {
-                            <form asp-action="DeleteCourse" asp-route-id="@course.Id" method="post"
-                                  onsubmit="return confirm('Are you sure you want to delete \'@Html.Raw(course.Title.Replace("'", "\\'"))\'? This cannot be undone.');">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-outline-danger btn-sm">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                        }
+                        <!-- Delete -->
+                        <form asp-action="DeleteCourse" asp-route-id="@course.Id" method="post"
+                              onsubmit="return confirm('Are you sure you want to delete \'@Html.Raw(course.Title.Replace("'", "\\'"))\'? This cannot be undone.');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
 
                     </div>
                 </div>

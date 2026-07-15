@@ -177,5 +177,31 @@ namespace UpSkillView.Controllers
             TempData["ErrorMessage"] = string.IsNullOrWhiteSpace(errorContent) ? "Certificate not available yet." : errorContent;
             return RedirectToAction("CoursePlayer", new { id = courseId });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> ViewCertificate(int enrollmentId)
+        {
+            var client = GetAuthenticatedClient();
+            var response = await client.GetAsync($"api/studentflow/certificate/{enrollmentId}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var cert = JsonSerializer.Deserialize<Application.Courses.DTOs.Student.CertificateResponseDto>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (cert != null)
+                {
+                    var studentName = User.FindFirst("FullName")?.Value 
+                                      ?? User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value 
+                                      ?? User.Identity?.Name 
+                                      ?? "Valued Student";
+
+                    ViewBag.StudentName = studentName;
+                    return View(cert);
+                }
+            }
+
+            TempData["ErrorMessage"] = "Certificate not found or not available yet.";
+            return RedirectToAction("Dashboard");
+        }
     }
 }

@@ -23,5 +23,6 @@ namespace Application.Courses.DTOs.Course
         public string InstructorName { get; set; }
         public int EnrollmentCount { get; set; }
         public DateTime CreatedAt { get; set; }
+        public string? RejectionReason { get; set; }
     }
 }

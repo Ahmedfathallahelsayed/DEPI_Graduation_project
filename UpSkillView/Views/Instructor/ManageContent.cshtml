@@ -28,9 +28,12 @@
                     </h2>
                     <div id="collapse-@sec.Id" class="accordion-collapse collapse @(i == 0 ? "show" : "")" aria-labelledby="heading-@sec.Id" data-bs-parent="#courseSections">
                         <div class="accordion-body">
-                            <div class="d-flex justify-content-end mb-3">
+                            <div class="d-flex justify-content-end mb-3 gap-2">
                                 <button class="btn btn-sm btn-outline-success" onclick="openAddLessonModal(@sec.Id)">
                                     <i class="bi bi-plus-lg"></i> Add Lesson
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteSection(@sec.Id)">
+                                    <i class="bi bi-trash"></i> Delete Section
                                 </button>
                             </div>
                             
@@ -46,8 +49,11 @@
                                                 <br/>
                                                 <small class="text-muted"><i class="bi bi-link-45deg"></i> <a href="@lesson.VideoUrl" target="_blank">@lesson.VideoUrl</a></small>
                                             </div>
-                                            <div>
+                                            <div class="d-flex align-items-center gap-2">
                                                 <span class="badge bg-dark">Order: @lesson.DisplayOrder</span>
+                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteLesson(@lesson.Id)" title="Delete Lesson">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
                                             </div>
                                         </li>
                                     }
@@ -190,6 +196,36 @@
                     alert('Error creating lesson. Please make sure the API is running and returning success.');
                 }
             });
+        }
+
+        function deleteSection(sectionId) {
+            if (confirm('Are you sure you want to delete this section and all of its lessons?')) {
+                fetch('/Instructor/DeleteSection/' + sectionId, {
+                    method: 'POST'
+                })
+                .then(res => {
+                    if (res.ok) {
+                        location.reload();
+                    } else {
+                        alert('Error deleting section.');
+                    }
+                });
+            }
+        }
+
+        function deleteLesson(lessonId) {
+            if (confirm('Are you sure you want to delete this lesson?')) {
+                fetch('/Instructor/DeleteLesson/' + lessonId, {
+                    method: 'POST'
+                })
+                .then(res => {
+                    if (res.ok) {
+                        location.reload();
+                    } else {
+                        alert('Error deleting lesson.');
+                    }
+                });
+            }
         }
     </script>
 }

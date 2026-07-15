@@ -30,7 +30,7 @@
         <span class="ms-2 small fw-bold">@(Model.ProgressPercentage)%</span>
         @if (Model.ProgressPercentage == 100)
         {
-            <a asp-action="DownloadCertificate" asp-route-enrollmentId="@Model.EnrollmentId" asp-route-courseId="@Model.CourseId" class="btn btn-sm btn-outline-warning ms-3">
+            <a asp-action="ViewCertificate" asp-route-enrollmentId="@Model.EnrollmentId" target="_blank" class="btn btn-sm btn-outline-warning ms-3">
                 <i class="bi bi-award me-1"></i> Get Certificate
             </a>
         }
@@ -46,7 +46,7 @@
                 <div id="videoPlaceholder" class="w-100 h-100 d-flex flex-column align-items-center justify-content-center">
                     <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Video Placeholder" class="img-fluid opacity-50 w-100 h-100" style="object-fit: cover; position: absolute; top:0; left:0;">
                     <div class="position-relative text-center" style="z-index: 10;">
-                        <button class="btn btn-primary rounded-circle p-3 mb-3 shadow" style="width: 80px; height: 80px;">
+                        <button id="videoPlaceholderPlayBtn" class="btn btn-primary rounded-circle p-3 mb-3 shadow" style="width: 80px; height: 80px;">
                             <i class="bi bi-play-fill fs-1 ms-1"></i>
                         </button>
                         <h3 class="text-white drop-shadow">Select a lesson to begin</h3>
@@ -87,7 +87,7 @@
                                             foreach (var lesson in sec.Lessons)
                                             {
                                                 <li class="list-group-item bg-transparent p-0">
-                                                    <div class="d-flex p-3 card-hover" style="cursor: pointer;" onclick="playVideo('@lesson.VideoUrl')">
+                                                    <div class="d-flex p-3 card-hover lesson-item" id="lesson-@lesson.Id" style="cursor: pointer;" onclick="playVideo('@lesson.VideoUrl', @lesson.Id)">
                                                         <div class="me-3">
                                                             @if (lesson.IsCompleted)
                                                             {
@@ -137,14 +137,87 @@
         main { padding: 0 !important; }
     </style>
     <script>
-        function playVideo(videoUrl) {
-            if (!videoUrl) {
-                return; // Optionally show an alert if no video URL exists
+        var lessons = [
+            @if (Model.Sections != null)
+            {
+                foreach (var sec in Model.Sections)
+                {
+                    if (sec.Lessons != null)
+                    {
+                        foreach (var lesson in sec.Lessons)
+                        {
+                            <text>{ id: @lesson.Id, title: "@Html.Raw(lesson.Title.Replace("\"", "\\\""))", url: "@lesson.VideoUrl", isCompleted: @(lesson.IsCompleted ? "true" : "false") },</text>
+                        }
+                    }
+                }
             }
+        ];
+
+        function getYouTubeEmbedUrl(url) {
+            if (!url) return '';
+            
+            // Match standard watch page or shared links
+            var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            var match = url.match(regExp);
+            
+            if (match && match[2].length == 11) {
+                var videoId = match[2];
+                return 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&rel=0';
+            }
+            
+            return url;
+        }
+
+        function playVideo(videoUrl, lessonId) {
+            if (!videoUrl) {
+                alert("This lesson does not have a video URL.");
+                return;
+            }
+            
+            var embedUrl = getYouTubeEmbedUrl(videoUrl);
+            
             document.getElementById('videoPlaceholder').classList.add('d-none');
             var iframe = document.getElementById('mainVideoPlayer');
-            iframe.src = videoUrl;
+            iframe.src = embedUrl;
             iframe.classList.remove('d-none');
+            
+            // Highlight the active lesson in the list
+            var lessonItems = document.querySelectorAll('.lesson-item');
+            lessonItems.forEach(function(el) {
+                el.classList.remove('bg-primary-soft', 'border-start', 'border-primary', 'border-4');
+                el.style.backgroundColor = 'transparent';
+            });
+            
+            if (lessonId) {
+                var activeEl = document.getElementById('lesson-' + lessonId);
+                if (activeEl) {
+                    activeEl.classList.add('bg-primary-soft', 'border-start', 'border-primary', 'border-4');
+                    activeEl.style.backgroundColor = 'rgba(13, 110, 253, 0.08)'; // Fallback soft styling
+                }
+            }
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (lessons.length > 0) {
+                // Find first incomplete lesson, or default to the first one
+                var firstLesson = lessons.find(function(l) { return !l.isCompleted; }) || lessons[0];
+                if (firstLesson && firstLesson.url) {
+                    // Play the video and highlight it on load
+                    playVideo(firstLesson.url, firstLesson.id);
+                }
+            }
+            
+            var playBtn = document.getElementById('videoPlaceholderPlayBtn');
+            if (playBtn) {
+                playBtn.addEventListener('click', function() {
+                    if (lessons.length > 0) {
+                        var firstLesson = lessons.find(function(l) { return !l.isCompleted; }) || lessons[0];
+                        if (firstLesson && firstLesson.url) {
+                            playVideo(firstLesson.url, firstLesson.id);
+                        }
+                    }
+                });
+            }
+        });
     </script>
 }

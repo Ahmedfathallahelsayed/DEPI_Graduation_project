@@ -35,5 +35,6 @@ namespace Application.Courses.DTOs.Course
 
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public string? RejectionReason { get; set; }
     }
 }

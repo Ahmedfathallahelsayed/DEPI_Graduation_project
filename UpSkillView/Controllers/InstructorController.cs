@@ -347,5 +347,25 @@ namespace UpSkillView.Controllers
                 return Ok();
             return BadRequest(await response.Content.ReadAsStringAsync());
         }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteSection(int id)
+        {
+            var client = GetAuthenticatedClient();
+            var response = await client.DeleteAsync($"api/CourseContent/sections/{id}");
+            if (response.IsSuccessStatusCode)
+                return Ok();
+            return BadRequest(await response.Content.ReadAsStringAsync());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteLesson(int id)
+        {
+            var client = GetAuthenticatedClient();
+            var response = await client.DeleteAsync($"api/CourseContent/lessons/{id}");
+            if (response.IsSuccessStatusCode)
+                return Ok();
+            return BadRequest(await response.Content.ReadAsStringAsync());
+        }
     }
 }

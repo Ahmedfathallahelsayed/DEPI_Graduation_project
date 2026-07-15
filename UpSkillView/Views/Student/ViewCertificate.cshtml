@@ -1,0 +1,286 @@
+@model Application.Courses.DTOs.Student.CertificateResponseDto
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Certificate of Completion - @Model.CourseTitle</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Montserrat:wght@300;400;600&family=Playfair+Display:ital,wght@1,500;1,700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .no-print-bar {
+            background: #fff;
+            width: 100%;
+            padding: 15px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .certificate-container {
+            background-color: #fff;
+            width: 900px;
+            height: 630px;
+            padding: 40px;
+            position: relative;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-image: radial-gradient(circle, rgba(254, 240, 138, 0.05) 0%, rgba(255, 255, 255, 1) 70%);
+            margin-top: 80px;
+            margin-bottom: 40px;
+        }
+
+        /* Outer double border */
+        .certificate-border {
+            border: 4px double #d4af37;
+            height: 100%;
+            padding: 30px;
+            box-sizing: border-box;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Corner decorations */
+        .corner-dec {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-color: #d4af37;
+            border-style: solid;
+            pointer-events: none;
+        }
+        .top-left { top: 10px; left: 10px; border-width: 2px 0 0 2px; }
+        .top-right { top: 10px; right: 10px; border-width: 2px 2px 0 0; }
+        .bottom-left { bottom: 10px; left: 10px; border-width: 0 0 2px 2px; }
+        .bottom-right { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; }
+
+        .cert-header {
+            font-family: 'Cinzel', serif;
+            color: #111827;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+
+        .cert-title {
+            font-family: 'Cinzel', serif;
+            color: #d4af37;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            margin-top: 15px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .cert-recipient-prefix {
+            font-size: 0.9rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 25px;
+        }
+
+        .cert-recipient-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.8rem;
+            color: #111827;
+            font-style: italic;
+            font-weight: 700;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 5px;
+            min-width: 400px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .cert-reason {
+            font-size: 0.95rem;
+            color: #4b5563;
+            max-width: 600px;
+            text-align: center;
+            line-height: 1.6;
+            margin-top: 20px;
+        }
+
+        .cert-course-title {
+            font-family: 'Cinzel', serif;
+            color: #1e3a8a;
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+
+        .cert-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 30px;
+        }
+
+        .signature-block {
+            text-align: center;
+            width: 200px;
+        }
+
+        .signature-line {
+            border-top: 1px solid #d1d5db;
+            margin-top: 40px;
+            padding-top: 5px;
+            font-size: 0.8rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .signature-pic {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            color: #1e3a8a;
+            font-size: 1.2rem;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .seal-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .seal-circle {
+            width: 90px;
+            height: 90px;
+            border: 4px double #d4af37;
+            border-radius: 50%;
+            background-color: #fef9c3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px -1px rgba(212, 175, 55, 0.2);
+            color: #d4af37;
+        }
+
+        .seal-text {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #6b7280;
+            margin-top: 8px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .verification-code {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+
+        /* Print formatting */
+        @@media print {
+            body {
+                background-color: #fff;
+                min-height: 0;
+            }
+            .no-print-bar {
+                display: none !important;
+            }
+            .certificate-container {
+                margin: 0 !important;
+                box-shadow: none !important;
+                page-break-inside: avoid;
+                width: 100% !important;
+                height: 100vh !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print-bar">
+        <button class="btn btn-primary" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i> Print / Save as PDF
+        </button>
+        <button class="btn btn-outline-secondary" onclick="window.close()">
+            <i class="bi bi-x-lg me-1"></i> Close Window
+        </button>
+    </div>
+
+    <div class="certificate-container">
+        <div class="certificate-border">
+            <div class="corner-dec top-left"></div>
+            <div class="corner-dec top-right"></div>
+            <div class="corner-dec bottom-left"></div>
+            <div class="corner-dec bottom-right"></div>
+
+            <div class="text-center">
+                <div class="cert-header">UP-SKILL LEARNING NETWORK</div>
+                <div class="cert-title">CERTIFICATE OF COMPLETION</div>
+            </div>
+
+            <div class="text-center d-flex flex-column align-items-center">
+                <div class="cert-recipient-prefix">This is proudly presented to</div>
+                <div class="cert-recipient-name">@ViewBag.StudentName</div>
+                <div class="cert-reason">
+                    for successfully demonstrating mastery and completing all curriculum requirements of the professional development course
+                </div>
+                <div class="cert-course-title">@Model.CourseTitle</div>
+            </div>
+
+            <div class="cert-footer">
+                <div class="signature-block">
+                    <div class="signature-pic">Ali Ahmed</div>
+                    <div class="signature-line">Course Instructor</div>
+                </div>
+
+                <div class="seal-block">
+                    <div class="seal-circle">
+                        <i class="bi bi-award fs-1"></i>
+                    </div>
+                    <div class="seal-text">Official Seal</div>
+                    <div class="verification-code">CODE: @Model.CertificateCode</div>
+                </div>
+
+                <div class="signature-block">
+                    <div class="signature-pic" style="font-family: 'Montserrat'; font-weight: 600; font-size: 1.1rem; color: #111827;">UpSkill Admin</div>
+                    <div class="signature-line">Issued on @Model.IssuedAt.ToString("MMMM dd, yyyy")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

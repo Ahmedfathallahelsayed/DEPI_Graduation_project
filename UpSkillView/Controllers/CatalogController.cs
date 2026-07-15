@@ -25,6 +25,18 @@ namespace UpSkillView.Controllers
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }
 
+            // Fetch active categories
+            List<Application.Courses.DTOs.Category.CategoryResponseDto> categories = new();
+            var categoriesResponse = await client.GetAsync("api/category");
+            if (categoriesResponse.IsSuccessStatusCode)
+            {
+                var catContent = await categoriesResponse.Content.ReadAsStringAsync();
+                categories = JsonSerializer.Deserialize<List<Application.Courses.DTOs.Category.CategoryResponseDto>>(catContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+            }
+            ViewBag.Categories = categories;
+            ViewBag.SelectedCategoryId = categoryId;
+            ViewBag.SearchQuery = search;
+
             var queryStr = $"?search={search}&categoryId={categoryId}";
             var response = await client.GetAsync($"api/StudentLearning/courses{queryStr}");
 
