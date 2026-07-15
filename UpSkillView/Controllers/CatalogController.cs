@@ -14,7 +14,7 @@ namespace UpSkillView.Controllers
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task<IActionResult> Index(string? search = null, int? categoryId = null)
+        public async Task<IActionResult> Index(string? search = null, [FromQuery] List<int>? categoryIds = null, [FromQuery] List<Domain.Enum.CourseLevel>? levels = null, string? price = null)
         {
             var client = _httpClientFactory.CreateClient("UpSkillAPI");
             
@@ -25,17 +25,43 @@ namespace UpSkillView.Controllers
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }
 
-            var queryStr = $"?search={search}&categoryId={categoryId}";
+            var queryStr = $"?search={search}&price={price}";
+            if (categoryIds != null)
+            {
+                foreach (var catId in categoryIds)
+                    queryStr += $"&categoryIds={catId}";
+            }
+            if (levels != null)
+            {
+                foreach (var lvl in levels)
+                    queryStr += $"&levels={lvl}";
+            }
             var response = await client.GetAsync($"api/StudentLearning/courses{queryStr}");
+            
+            // Fetch Categories
+            var categoriesResponse = await client.GetAsync("api/category");
+
+            var vm = new UpSkillView.Models.CatalogViewModel
+            {
+                SearchQuery = search,
+                SelectedCategoryIds = categoryIds ?? new List<int>(),
+                SelectedLevels = levels ?? new List<Domain.Enum.CourseLevel>(),
+                SelectedPrice = price
+            };
 
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                var courses = JsonSerializer.Deserialize<List<StudentCourseSummaryDto>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                return View(courses ?? new List<StudentCourseSummaryDto>());
+                vm.Courses = JsonSerializer.Deserialize<List<StudentCourseSummaryDto>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<StudentCourseSummaryDto>();
             }
 
-            return View(new List<StudentCourseSummaryDto>());
+            if (categoriesResponse.IsSuccessStatusCode)
+            {
+                var catContent = await categoriesResponse.Content.ReadAsStringAsync();
+                vm.Categories = JsonSerializer.Deserialize<List<Application.Courses.DTOs.Category.CategoryResponseDto>>(catContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<Application.Courses.DTOs.Category.CategoryResponseDto>();
+            }
+
+            return View(vm);
         }
 
         public async Task<IActionResult> Details(int id)

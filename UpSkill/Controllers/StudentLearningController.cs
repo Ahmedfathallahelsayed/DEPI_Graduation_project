@@ -41,11 +41,11 @@ namespace UpSkillAPI.Controllers
         }
         [HttpGet("courses")]
         [AllowAnonymous] // Anyone can view the catalog, but IsEnrolled needs user info
-        public async Task<IActionResult> GetStudentCatalog([FromQuery] string? search = null, [FromQuery] int? categoryId = null)
+        public async Task<IActionResult> GetStudentCatalog([FromQuery] string? search = null, [FromQuery] List<int>? categoryIds = null, [FromQuery] List<Domain.Enum.CourseLevel>? levels = null, [FromQuery] string? price = null)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
             
-            var catalog = await _studentLearningService.GetStudentCatalogAsync(userId, search, categoryId);
+            var catalog = await _studentLearningService.GetStudentCatalogAsync(userId, search, categoryIds, levels, price);
             return Ok(catalog);
         }
 

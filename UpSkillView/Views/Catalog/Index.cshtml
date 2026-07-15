@@ -1,82 +1,134 @@
-@model List<Application.CourseContent.DTOs.StudentCourseSummaryDto>
+@model UpSkillView.Models.CatalogViewModel
 @{
-    ViewData["Title"] = "Course Catalog";
+    ViewData["Title"] = "All Courses";
 }
 
-<div class="container">
-    <!-- Breadcrumbs -->
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
-            <li class="breadcrumb-item active" aria-current="page">All Courses</li>
-        </ol>
-    </nav>
+<div class="py-5">
+    <div class="container">
+        <!-- Breadcrumbs -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">All Courses</li>
+            </ol>
+        </nav>
 
-    <div class="row mb-4 align-items-center">
-        <div class="col-md-6">
-            <h1 class="mb-0">All Courses</h1>
-            <p class="text-muted mt-2 mb-0">Explore our available courses to expand your skills.</p>
-        </div>
-        <div class="col-md-6 text-md-end mt-3 mt-md-0">
-            <form asp-action="Index" method="get" class="d-inline-flex align-items-center gap-2">
-                <input type="text" name="search" class="form-control w-auto" placeholder="Search..." value="@Context.Request.Query["search"]" />
-                <button type="submit" class="btn btn-outline-primary">Search</button>
-            </form>
-        </div>
-    </div>
-
-    <div class="row">
-        <!-- Sidebar Filters -->
-        <div class="col-lg-3 mb-4 mb-lg-0">
-            <div class="card p-3 sticky-top" style="top: 100px; z-index: 1;">
-                <h5 class="mb-4">Filters</h5>
-                
-                <p class="text-muted small">Filters can be implemented here by Category IDs.</p>
-
-                <a asp-action="Index" class="btn btn-outline-secondary w-100 mt-2">Clear Filters</a>
+        <div class="row mb-4 align-items-center">
+            <div class="col-md-6">
+                <h1 class="mb-0">All Courses</h1>
+                <p class="text-muted mt-2 mb-0">Explore our comprehensive catalog of courses.</p>
             </div>
         </div>
 
-        <!-- Course Grid -->
-        <div class="col-lg-9">
-            <div class="row g-4 mb-5">
-                @if (Model != null && Model.Any())
-                {
-                    foreach (var course in Model)
-                    {
-                        <div class="col-md-6 col-xl-4">
-                            <div class="card course-card h-100 card-hover">
-                                <a asp-action="Details" asp-route-id="@course.CourseId">
-                                    <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="@course.Title">
-                                </a>
-                                <div class="card-body d-flex flex-column">
-                                    <span class="badge bg-primary-soft mb-2 align-self-start">@course.CategoryName</span>
-                                    <h5 class="card-title">
-                                        <a asp-action="Details" asp-route-id="@course.CourseId" class="text-dark text-decoration-none">@course.Title</a>
-                                    </h5>
-                                    <p class="course-instructor mb-2">Instructor: @course.InstructorName</p>
-                                    <div class="d-flex align-items-center mb-3">
-                                        <span class="text-warning me-1"><i class="bi bi-star-fill"></i></span>
-                                        <span class="text-muted small">@(course.IsEnrolled ? "(Enrolled)" : "")</span>
-                                    </div>
-                                    <div class="mt-auto d-flex justify-content-between align-items-center">
-                                        <span class="course-price">$@(course.Price.ToString("0.00"))</span>
-                                        <a asp-action="Details" asp-route-id="@course.CourseId" class="btn btn-sm btn-outline-primary">Details</a>
-                                    </div>
+        <form method="get" asp-action="Index" id="filterForm">
+            <!-- Retain SearchQuery if exists -->
+            @if (!string.IsNullOrEmpty(Model.SearchQuery))
+            {
+                <input type="hidden" name="search" value="@Model.SearchQuery" />
+            }
+            <div class="row">
+                <!-- Sidebar Filters -->
+                <div class="col-lg-3 mb-4 mb-lg-0">
+                    <div class="card p-3 sticky-top" style="top: 100px; z-index: 1;">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="mb-0">Filters</h5>
+                            <button type="submit" class="btn btn-sm btn-primary">Apply</button>
+                        </div>
+                        
+                        <!-- Category Filter -->
+                        <div class="mb-4">
+                            <h6 class="fw-bold mb-3">Category</h6>
+                            @foreach(var cat in Model.Categories)
+                            {
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="categoryIds" value="@cat.Id" id="cat_@cat.Id" @(Model.SelectedCategoryIds.Contains(cat.Id) ? "checked" : "")>
+                                    <label class="form-check-label" for="cat_@cat.Id">@cat.Name</label>
                                 </div>
+                            }
+                        </div>
+
+                        <!-- Level Filter -->
+                        <div class="mb-4">
+                            <h6 class="fw-bold mb-3">Level</h6>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="levels" value="Beginner" id="levelBeg" @(Model.SelectedLevels.Contains(Domain.Enum.CourseLevel.Beginner) ? "checked" : "")>
+                                <label class="form-check-label" for="levelBeg">Beginner</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="levels" value="Intermediate" id="levelInt" @(Model.SelectedLevels.Contains(Domain.Enum.CourseLevel.Intermediate) ? "checked" : "")>
+                                <label class="form-check-label" for="levelInt">Intermediate</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="levels" value="Advanced" id="levelAdv" @(Model.SelectedLevels.Contains(Domain.Enum.CourseLevel.Advanced) ? "checked" : "")>
+                                <label class="form-check-label" for="levelAdv">Advanced</label>
                             </div>
                         </div>
-                    }
-                }
-                else
-                {
-                    <div class="col-12 text-center py-5">
-                        <i class="bi bi-search fs-1 text-muted mb-3 d-block"></i>
-                        <h5>No courses found</h5>
-                        <p class="text-muted">Try adjusting your search criteria.</p>
+
+                        <!-- Price Filter -->
+                        <div class="mb-4">
+                            <h6 class="fw-bold mb-3">Price</h6>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="price" value="" id="priceAll" @(string.IsNullOrEmpty(Model.SelectedPrice) ? "checked" : "")>
+                                <label class="form-check-label" for="priceAll">All Prices</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="price" value="paid" id="pricePaid" @(Model.SelectedPrice == "paid" ? "checked" : "")>
+                                <label class="form-check-label" for="pricePaid">Paid</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="price" value="free" id="priceFree" @(Model.SelectedPrice == "free" ? "checked" : "")>
+                                <label class="form-check-label" for="priceFree">Free</label>
+                            </div>
+                        </div>
+
+                        <a asp-action="Index" class="btn btn-outline-secondary w-100 mt-2">Clear Filters</a>
                     </div>
-                }
+                </div>
+
+                <!-- Course Grid -->
+                <div class="col-lg-9">
+                    @if (Model.Courses.Any())
+                    {
+                        <div class="row g-4 mb-5">
+                            @foreach (var course in Model.Courses)
+                            {
+                                <!-- Course Card -->
+                                <div class="col-md-6 col-xl-4">
+                                    <div class="card course-card h-100 card-hover">
+                                        <a asp-action="Details" asp-route-id="@course.CourseId">
+                                            <img src="@(string.IsNullOrEmpty(course.ThumbnailUrl) || !course.ThumbnailUrl.StartsWith("http") ? "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=600&q=80" : course.ThumbnailUrl)" class="card-img-top" alt="@course.Title" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=600&q=80';">
+                                        </a>
+                                        <div class="card-body d-flex flex-column">
+                                            <span class="badge bg-primary-soft mb-2 align-self-start">@course.CategoryName</span>
+                                            <h5 class="card-title">
+                                                <a asp-action="Details" asp-route-id="@course.CourseId" class="text-dark text-decoration-none">@course.Title</a>
+                                            </h5>
+                                            <p class="course-instructor mb-2">@course.InstructorName</p>
+                                            <div class="d-flex align-items-center mb-3">
+                                                <!-- Level Badge -->
+                                                <span class="badge bg-secondary me-2">@course.Level</span>
+                                            </div>
+                                            <div class="mt-auto d-flex justify-content-between align-items-center">
+                                                <span class="course-price">@(course.Price == 0 ? "Free" : "$" + course.Price.ToString("0.00"))</span>
+                                                <a asp-action="Details" asp-route-id="@course.CourseId" class="btn btn-sm btn-outline-primary">Details</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="bi bi-search empty-state-icon"></i>
+                            <h4>No courses found</h4>
+                            <p class="text-muted">Try adjusting your filters or search query.</p>
+                            <a asp-action="Index" class="btn btn-primary mt-3">Clear All Filters</a>
+                        </div>
+                    }
+                </div>
             </div>
-        </div>
+        </form>
     </div>
 </div>

@@ -8,7 +8,7 @@ namespace Application.CourseContent.Interfaces
     {
         Task<IEnumerable<SectionDto>> GetCourseHierarchyAsync(int courseId, string userId);
         Task<bool> MarkLessonCompleteAsync(int lessonId, string userId);
-        Task<IEnumerable<StudentCourseSummaryDto>> GetStudentCatalogAsync(string userId, string? search = null, int? categoryId = null);
+        Task<IEnumerable<StudentCourseSummaryDto>> GetStudentCatalogAsync(string userId, string? search = null, List<int>? categoryIds = null, List<Domain.Enum.CourseLevel>? levels = null, string? price = null);
         Task<StudentCourseDetailsDto?> GetStudentCourseDetailsAsync(int courseId, string userId);
         Task<Application.Common.Result> EnrollStudentAsync(int courseId, string userId);
         Task<IEnumerable<MyCourseDto>> GetMyCoursesAsync(string userId);
