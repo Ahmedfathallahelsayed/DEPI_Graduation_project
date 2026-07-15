@@ -15,6 +15,21 @@ namespace UpSkillView.Controllers
 
         public IActionResult Index()
         {
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                if (User.IsInRole("Student"))
+                {
+                    return RedirectToAction("Dashboard", "Student");
+                }
+                else if (User.IsInRole("Instructor"))
+                {
+                    return RedirectToAction("Dashboard", "Instructor");
+                }
+                else if (User.IsInRole("Admin"))
+                {
+                    return RedirectToAction("Dashboard", "Admin");
+                }
+            }
             return View();
         }
 
